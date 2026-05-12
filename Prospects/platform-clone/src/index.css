@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-primary antialiased;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl;
+  }
+  
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-xl border border-white/5 rounded-2xl;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60;
+  }
+
+  .stars-pattern {
+    background-image: 
+      radial-gradient(circle at center, white 1px, transparent 1px),
+      radial-gradient(circle at center, white 1.5px, transparent 1.5px);
+    background-size: 100px 100px, 150px 150px;
+    background-position: 0 0, 50px 50px;
+    opacity: 0.15;
+  }
+}

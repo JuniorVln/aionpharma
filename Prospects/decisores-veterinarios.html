@@ -1,0 +1,1112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Decisores Veterinários no Brasil</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a0d;
+      --panel: #10161c;
+      --panel-2: #151d25;
+      --line: #26313b;
+      --text: #eef5f8;
+      --muted: #99a8b3;
+      --accent: #23c58f;
+      --accent-2: #47a3ff;
+      --warn: #d8a642;
+      --danger: #ff6b6b;
+      --shadow: 0 18px 45px rgba(0, 0, 0, .35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(35, 197, 143, .16), transparent 34rem),
+        linear-gradient(180deg, #070a0d 0%, #0a0f14 45%, #070a0d 100%);
+      color: var(--text);
+      font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1760px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 48px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 920px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(16, 22, 28, .92);
+      padding: 0 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
+    }
+
+    .control span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .control input,
+    .control select {
+      min-width: 140px;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .control input {
+      width: min(32vw, 360px);
+    }
+
+    .control select option {
+      color: #0c1117;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      min-height: 94px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(16, 22, 28, .9);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric small {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 11px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(10, 15, 20, .86);
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 58px;
+      padding: 12px 16px;
+      background: rgba(21, 29, 37, .95);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 3px 9px;
+      white-space: nowrap;
+      color: #07110d;
+      background: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill.partial {
+      color: #1d1403;
+      background: var(--warn);
+    }
+
+    .record-count {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1560px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid rgba(38, 49, 59, .72);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      color: #c7d5df;
+      background: #0b1117;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    tbody tr {
+      background: rgba(7, 10, 13, .4);
+    }
+
+    tbody tr:hover {
+      background: rgba(35, 197, 143, .08);
+    }
+
+    .index-cell {
+      width: 52px;
+      color: #d5e0e7;
+      font-weight: 800;
+    }
+
+    .name-cell {
+      min-width: 180px;
+      font-weight: 800;
+    }
+
+    .link-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 108px;
+    }
+
+    .link-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      border: 1px solid rgba(71, 163, 255, .35);
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: #b9ddff;
+      background: rgba(71, 163, 255, .09);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .link-chip.github {
+      color: #e7ecf0;
+      border-color: rgba(231, 236, 240, .34);
+      background: rgba(231, 236, 240, .08);
+    }
+
+    .link-chip.findmore {
+      color: #d8ffd8;
+      border-color: rgba(35, 197, 143, .38);
+      background: rgba(35, 197, 143, .1);
+    }
+
+    .clickable-cell {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 7px;
+      max-width: 290px;
+      color: #edf8f4;
+    }
+
+    .clickable-cell::before {
+      content: "";
+      flex: 0 0 7px;
+      width: 7px;
+      height: 7px;
+      margin-top: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .dept {
+      display: inline-flex;
+      align-items: center;
+      min-height: 23px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: #dce6ec;
+      background: rgba(255, 255, 255, .07);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .source-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 210px;
+      max-width: 360px;
+    }
+
+    .source-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border: 1px solid rgba(35, 197, 143, .32);
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: #cdf7e8;
+      background: rgba(35, 197, 143, .08);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .source-link.pending {
+      color: var(--muted);
+      border-color: rgba(153, 168, 179, .24);
+      background: rgba(153, 168, 179, .06);
+    }
+
+    .country {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      min-width: 150px;
+    }
+
+    .action-btn {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: #e8f2f7;
+      background: rgba(255, 255, 255, .04);
+      cursor: pointer;
+      padding: 7px 10px;
+    }
+
+    .action-btn:hover {
+      border-color: rgba(35, 197, 143, .72);
+      background: rgba(35, 197, 143, .1);
+    }
+
+    .empty {
+      display: none;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        width: min(100vw - 20px, 1760px);
+        padding-top: 18px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: stretch;
+      }
+
+      .control {
+        flex: 1 1 100%;
+      }
+
+      .control input {
+        width: 100%;
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div>
+        <h1>Decisores Veterinários no Brasil</h1>
+        <p class="subtitle">Base com 23 registros extraídos da planilha, organizada por nível de correspondência. Nomes, empresas, cargos, redes e países são clicáveis para abrir pesquisas em novas abas.</p>
+      </div>
+      <div class="toolbar" aria-label="Filtros da tabela">
+        <label class="control">
+          <span>Buscar</span>
+          <input id="searchInput" type="search" placeholder="Nome, empresa, cargo...">
+        </label>
+        <label class="control">
+          <span>Match</span>
+          <select id="matchFilter">
+            <option value="all">Todos</option>
+            <option value="Fully Matched">Fully Matched</option>
+            <option value="Partially Matched">Partially Matched</option>
+          </select>
+        </label>
+        <label class="control">
+          <span>Departamento</span>
+          <select id="deptFilter">
+            <option value="all">Todos</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Resumo">
+      <article class="metric">
+        <small>Total</small>
+        <strong id="totalMetric">23</strong>
+        <span>registros na lista</span>
+      </article>
+      <article class="metric">
+        <small>Fully Matched</small>
+        <strong id="fullMetric">20</strong>
+        <span>correspondências completas</span>
+      </article>
+      <article class="metric">
+        <small>Partially Matched</small>
+        <strong id="partialMetric">3</strong>
+        <span>exigem validação manual</span>
+      </article>
+      <article class="metric">
+        <small>Enriquecidos</small>
+        <strong id="authorityMetric">0</strong>
+        <span>leads com URLs reais via Apify</span>
+      </article>
+    </section>
+
+    <section class="section" data-section="Fully Matched">
+      <div class="section-header">
+        <h2 class="section-title"><span class="pill">Fully Matched</span><span class="record-count" id="fullCount">20 registros</span></h2>
+        <span class="footer-note">Linhas com maior aderência ao alvo</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome</th>
+              <th>Links</th>
+              <th>E-mail</th>
+              <th>Match</th>
+              <th>Empresa original</th>
+              <th>Cargo decisório</th>
+              <th>Segmento</th>
+              <th>Localização</th>
+              <th>Autoridade de compra</th>
+              <th>Empresa validada</th>
+              <th>Cargo validado</th>
+              <th>Departamento</th>
+              <th>País/Região</th>
+              <th>Enriquecimento</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="fullyBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" data-section="Partially Matched">
+      <div class="section-header">
+        <h2 class="section-title"><span class="pill partial">Partially Matched</span><span class="record-count" id="partialCount">3 registros</span></h2>
+        <span class="footer-note">Linhas que precisam de revisão</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome</th>
+              <th>Links</th>
+              <th>E-mail</th>
+              <th>Match</th>
+              <th>Empresa original</th>
+              <th>Cargo decisório</th>
+              <th>Segmento</th>
+              <th>Localização</th>
+              <th>Autoridade de compra</th>
+              <th>Empresa validada</th>
+              <th>Cargo validado</th>
+              <th>Departamento</th>
+              <th>País/Região</th>
+              <th>Enriquecimento</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="partialBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p id="emptyState" class="empty">Nenhum registro encontrado com os filtros atuais.</p>
+    <p class="footer-note">Observação: quando o arquivo de enriquecimento ainda não existe, os links abrem pesquisas relevantes. Depois do Apify, a tabela prioriza URLs reais encontradas.</p>
+  </main>
+
+  <script src="decisores-veterinarios-enriched.js"></script>
+  <script>
+    const records = [
+      {
+        id: 1,
+        name: "Elaine Santos",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "NOXON SAÚDE ANIMAL",
+        decisionTitle: "Comprador",
+        segment: "Indústria Farmacêutica Veterinária",
+        location: "Brasil",
+        authority: "Autoridade em compras",
+        validatedCompany: "NOXON SAÚDE ANIMAL - Indústria Farmacêutica Veterinária",
+        validatedTitle: "Buyer",
+        departments: ["master_finance"],
+        country: "BR"
+      },
+      {
+        id: 2,
+        name: "Ezequias Neto",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Mundo Animal Laboratório Veterinário",
+        decisionTitle: "Diretor",
+        segment: "Laboratório Veterinário",
+        location: "Brasil",
+        authority: "Proprietário com poder de compra",
+        validatedCompany: "Mundo Animal Laboratório Veterinário",
+        validatedTitle: "Dir. Proprietário",
+        departments: ["-"],
+        country: "BR"
+      },
+      {
+        id: 3,
+        name: "Luiz Marcelino",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Agrofort",
+        decisionTitle: "Diretor Comercial",
+        segment: "Agrofort",
+        location: "Brasil",
+        authority: "Diretor Comercial",
+        validatedCompany: "Agrofort",
+        validatedTitle: "Sócio - Diretor Comercial",
+        departments: ["c_suite"],
+        country: "BR"
+      },
+      {
+        id: 4,
+        name: "Eliezer Barros",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "VetBR Saúde Animal",
+        decisionTitle: "Diretor de Operações",
+        segment: "Distribuidora de saúde animal",
+        location: "Brasil",
+        authority: "Alta autoridade decisória",
+        validatedCompany: "VetBR Saúde Animal",
+        validatedTitle: "Diretor de Operações - COO",
+        departments: ["c_suite", "master_information_technology", "master_operations", "+1"],
+        country: "BR"
+      },
+      {
+        id: 5,
+        name: "Caio Salomao",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "VetQuest",
+        decisionTitle: "Gerente Geral",
+        segment: "Distribuição e Indústria",
+        location: "Brasil",
+        authority: "Alta Autoridade",
+        validatedCompany: "VetQuest",
+        validatedTitle: "General Manager",
+        departments: ["master_operations"],
+        country: "BR"
+      },
+      {
+        id: 6,
+        name: "Claudia Silva",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Distribuidora Playpet Domus",
+        decisionTitle: "Diretor",
+        segment: "Distribuidora",
+        location: "Brasil",
+        authority: "Alta autoridade",
+        validatedCompany: "Distribuidora Playpet Domus",
+        validatedTitle: "Administrative Director",
+        departments: ["master_operations"],
+        country: "BR"
+      },
+      {
+        id: 7,
+        name: "Paola Turazza",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Cooper Nutri",
+        decisionTitle: "Diretor",
+        segment: "Cooper Nutri",
+        location: "Brasil",
+        authority: "Diretor",
+        validatedCompany: "Cooper Nutri",
+        validatedTitle: "Director",
+        departments: ["-"],
+        country: "BR"
+      },
+      {
+        id: 8,
+        name: "Vitor Franceschini",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Farmabase",
+        decisionTitle: "Diretor Executivo",
+        segment: "Farmabase",
+        location: "Brasil",
+        authority: "Alta autoridade",
+        validatedCompany: "Farmabase Saúde Animal Ltda.",
+        validatedTitle: "Diretor Executivo-CEO",
+        departments: ["c_suite"],
+        country: "BR"
+      },
+      {
+        id: 9,
+        name: "Heitor Caetano",
+        networks: ["github", "linkedin"],
+        match: "Fully Matched",
+        originalCompany: "JA Saúde Animal",
+        decisionTitle: "Diretor Financeiro",
+        segment: "JA Saúde Animal",
+        location: "Brasil",
+        authority: "CFO",
+        validatedCompany: "JA Saúde Animal",
+        validatedTitle: "CFO",
+        departments: ["c_suite", "master_finance"],
+        country: "BR"
+      },
+      {
+        id: 10,
+        name: "Thiago Goulart",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "VetQuest",
+        decisionTitle: "Sócio-proprietário",
+        segment: "VetQuest",
+        location: "Brasil",
+        authority: "Alta autoridade",
+        validatedCompany: "VetQuest",
+        validatedTitle: "Owner Partner",
+        departments: ["-"],
+        country: "BR"
+      },
+      {
+        id: 11,
+        name: "Aline Martins",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Calbos Saúde Animal",
+        decisionTitle: "Gerente Geral",
+        segment: "Calbos Saúde Animal",
+        location: "Brasil",
+        authority: "Gerente Geral",
+        validatedCompany: "Calbos Saúde Animal",
+        validatedTitle: "Gerente Geral Administrativo",
+        departments: ["master_operations"],
+        country: "BR"
+      },
+      {
+        id: 12,
+        name: "Leonardo Amoedo",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Amoedo Distribuidora",
+        decisionTitle: "Diretor Executivo",
+        segment: "Distribuidora",
+        location: "Brasil",
+        authority: "Alta autoridade",
+        validatedCompany: "Amoedo Distribuidora",
+        validatedTitle: "CEO",
+        departments: ["c_suite"],
+        country: "BR"
+      },
+      {
+        id: 13,
+        name: "Sergio Marchetti",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "JA Saúde Animal",
+        decisionTitle: "Gerente Geral",
+        segment: "Indústria de Saúde Animal",
+        location: "Brasil",
+        authority: "Autoridade de Gestão",
+        validatedCompany: "JA Saúde Animal",
+        validatedTitle: "Gerente Geral Administrativo Financeiro",
+        departments: ["master_finance", "master_operations", "+1"],
+        country: "BR"
+      },
+      {
+        id: 14,
+        name: "Mauricio Malheiros",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "JA Saúde Animal",
+        decisionTitle: "Diretor de Operações",
+        segment: "Indústria de saúde animal",
+        location: "Brasil",
+        authority: "Alta autoridade de decisão",
+        validatedCompany: "JA Saúde Animal",
+        validatedTitle: "Diretor de Operações - COO",
+        departments: ["c_suite", "master_information_technology", "master_operations", "+1"],
+        country: "BR"
+      },
+      {
+        id: 15,
+        name: "Maira Billi",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Pearson Saúde Animal",
+        decisionTitle: "Diretor Executivo",
+        segment: "Saúde Animal",
+        location: "Brasil",
+        authority: "Autoridade executiva",
+        validatedCompany: "Pearson Saúde Animal",
+        validatedTitle: "CEO",
+        departments: ["c_suite"],
+        country: "BR"
+      },
+      {
+        id: 16,
+        name: "Luiz Luccas",
+        networks: ["github", "linkedin"],
+        match: "Fully Matched",
+        originalCompany: "JA Saúde Animal",
+        decisionTitle: "Diretor Executivo",
+        segment: "Indústria de Saúde Animal",
+        location: "Brasil",
+        authority: "Autoridade Executiva",
+        validatedCompany: "JA Saúde Animal",
+        validatedTitle: "Diretor Geral / CEO",
+        departments: ["c_suite"],
+        country: "BR"
+      },
+      {
+        id: 17,
+        name: "Nicole Godinho",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Vet Vale Saúde Animal",
+        decisionTitle: "Diretor",
+        segment: "Vet Vale Saúde Animal",
+        location: "Brasil",
+        authority: "Diretor",
+        validatedCompany: "Vet Vale Saúde Animal",
+        validatedTitle: "Administrative Director",
+        departments: ["master_operations"],
+        country: "BR"
+      },
+      {
+        id: 18,
+        name: "Marcos Sobrinho",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "Distribuidora Playpet Domus",
+        decisionTitle: "Diretor Executivo",
+        segment: "Distribuidora",
+        location: "Brasil",
+        authority: "Alta autoridade de compra",
+        validatedCompany: "Distribuidora Playpet Domus",
+        validatedTitle: "CEO",
+        departments: ["c_suite"],
+        country: "BR"
+      },
+      {
+        id: 19,
+        name: "Fernando Nogueira",
+        networks: ["linkedin"],
+        match: "Fully Matched",
+        originalCompany: "VeterinUp! Saúde Animal",
+        decisionTitle: "Diretor Executivo",
+        segment: "Saúde Animal",
+        location: "Brasil",
+        authority: "Alta autoridade de compra",
+        validatedCompany: "VeterinUp! Saúde Animal",
+        validatedTitle: "CEO",
+        departments: ["c_suite"],
+        country: "BR"
+      },
+      {
+        id: 20,
+        name: "Rafael Mio",
+        networks: ["find more", "linkedin"],
+        match: "Fully Matched",
+        originalCompany: "VetQuest",
+        decisionTitle: "Sócio Proprietário",
+        segment: "Distribuidor",
+        location: "Brasil",
+        authority: "Alta autoridade",
+        validatedCompany: "VetQuest",
+        validatedTitle: "Sócio Proprietário-Vetquest",
+        departments: ["-"],
+        country: "BR"
+      },
+      {
+        id: 1,
+        name: "Provet Veterinaria",
+        networks: ["linkedin"],
+        match: "Partially Matched",
+        originalCompany: "Clínica veterinária e pet shop",
+        decisionTitle: "Sócio-Proprietário",
+        segment: "Clínica Veterinária e Pet Shop",
+        location: "Brasil",
+        authority: "Sócio-Proprietário na Provet Veterinária",
+        validatedCompany: "proVET Nordic",
+        validatedTitle: "Owner Partner",
+        departments: ["-"],
+        country: "BR"
+      },
+      {
+        id: 2,
+        name: "Roberto Fecchio",
+        networks: ["linkedin"],
+        match: "Partially Matched",
+        originalCompany: "Clínica Safari",
+        decisionTitle: "Sócio Proprietário",
+        segment: "Clínica veterinária",
+        location: "Brasil",
+        authority: "Sem dados de autoridade",
+        validatedCompany: "Clínica Safari",
+        validatedTitle: "Sócio Proprietário/",
+        departments: ["-"],
+        country: "BR"
+      },
+      {
+        id: 3,
+        name: "Cassiano Bertoletti",
+        networks: ["linkedin"],
+        match: "Partially Matched",
+        originalCompany: "HOSPIDEZ - COMÉRCIO DE PRODUTOS MÉDICO-HOSPITALARES LTDA",
+        decisionTitle: "Diretor Comercial",
+        segment: "Produtos médico-hospitalares",
+        location: "Brasil",
+        authority: "Sem dados de veterinária",
+        validatedCompany: "HOSPIDEZ - COMÉRCIO DE PRODUTOS MÉDICO-HOSPITALARES LTDA",
+        validatedTitle: "Diretor Comercial - ( Sócio - Proprietário )",
+        departments: ["-"],
+        country: "BR"
+      }
+    ];
+
+    function normalizeKeyPart(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+    }
+
+    function leadKey(record) {
+      return [record.match, record.id, record.name, record.validatedCompany].map(normalizeKeyPart).join("|");
+    }
+
+    const enrichmentIndex = new Map(
+      (window.LEAD_ENRICHMENT || []).map(item => [item.key || leadKey(item), item])
+    );
+    const enrichedRecords = records.map(record => ({
+      ...record,
+      key: leadKey(record),
+      enrichment: enrichmentIndex.get(leadKey(record)) || null
+    }));
+
+    const fullyBody = document.querySelector("#fullyBody");
+    const partialBody = document.querySelector("#partialBody");
+    const searchInput = document.querySelector("#searchInput");
+    const matchFilter = document.querySelector("#matchFilter");
+    const deptFilter = document.querySelector("#deptFilter");
+    const emptyState = document.querySelector("#emptyState");
+    const fullCount = document.querySelector("#fullCount");
+    const partialCount = document.querySelector("#partialCount");
+
+    const searchUrl = query => `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+    const linkedInUrl = record => `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(`${record.name} ${record.validatedCompany}`)}`;
+    const githubUrl = record => `https://github.com/search?q=${encodeURIComponent(record.name)}&type=users`;
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function link(label, queryOrUrl, className = "clickable-cell") {
+      const href = /^(https?:|mailto:|tel:)/i.test(String(queryOrUrl)) ? queryOrUrl : searchUrl(queryOrUrl);
+      return `<a class="${className}" href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+    }
+
+    function networkLinks(record) {
+      return record.networks.map(network => {
+        const normalized = network.toLowerCase();
+        const href = normalized === "linkedin"
+          ? (record.enrichment?.linkedinUrl || linkedInUrl(record))
+          : normalized === "github"
+            ? (record.enrichment?.githubUrl || githubUrl(record))
+            : searchUrl(`${record.name} ${record.validatedCompany} contato`);
+        const className = normalized === "github" ? "link-chip github" : normalized === "find more" ? "link-chip findmore" : "link-chip";
+        return `<a class="${className}" href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(network)}</a>`;
+      }).join("");
+    }
+
+    function departments(record) {
+      return record.departments.map(dept => {
+        const href = dept === "-" ? searchUrl(`${record.name} ${record.validatedCompany}`) : searchUrl(`${dept} ${record.validatedCompany}`);
+        return `<a class="dept" href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(dept)}</a>`;
+      }).join(" ");
+    }
+
+    function emailLink(record) {
+      const email = record.enrichment?.emails?.[0];
+      if (email) {
+        return link(email, `mailto:${email}`, "link-chip");
+      }
+      return `<a class="link-chip" href="${searchUrl(`${record.name} ${record.validatedCompany} email contato`)}" target="_blank" rel="noopener noreferrer">Buscar e-mail</a>`;
+    }
+
+    function countryLink(record) {
+      return `<a class="country" href="${searchUrl(`${record.validatedCompany} ${record.country}`)}" target="_blank" rel="noopener noreferrer">🇧🇷 ${escapeHtml(record.country)}</a>`;
+    }
+
+    function enrichmentLinks(record) {
+      const e = record.enrichment;
+      if (!e || e.enrichmentStatus === "pending") {
+        return `<div class="source-links"><span class="source-link pending">Pendente Apify</span></div>`;
+      }
+      const chips = [];
+      if (e.linkedinUrl) chips.push(link("Perfil", e.linkedinUrl, "source-link"));
+      if (e.companyLinkedinUrl) chips.push(link("LinkedIn empresa", e.companyLinkedinUrl, "source-link"));
+      if (e.websiteUrl) chips.push(link("Site", e.websiteUrl, "source-link"));
+      if (e.emails?.[0]) chips.push(link("E-mail", `mailto:${e.emails[0]}`, "source-link"));
+      if (e.phones?.[0]) chips.push(link("Telefone", `tel:${e.phones[0].replace(/[^+\d]/g, "")}`, "source-link"));
+      if (e.sourceUrls?.[0]) chips.push(link(`${e.sourceUrls.length} fontes`, e.sourceUrls[0].url, "source-link"));
+      return `<div class="source-links">${chips.join("") || '<span class="source-link pending">Sem achados</span>'}</div>`;
+    }
+
+    function searchableText(record) {
+      const e = record.enrichment || {};
+      return [
+        ...Object.values(record).filter(value => typeof value !== "object"),
+        record.departments.join(" "),
+        e.linkedinUrl,
+        e.companyLinkedinUrl,
+        e.websiteUrl,
+        ...(e.emails || []),
+        ...(e.phones || []),
+        ...((e.sourceUrls || []).map(source => `${source.title || ""} ${source.url || ""} ${source.description || ""}`))
+      ].join(" ").toLowerCase();
+    }
+
+    function rowHtml(record) {
+      const searchBase = `${record.name} ${record.validatedCompany}`;
+      const companyHref = record.enrichment?.websiteUrl || record.enrichment?.companyLinkedinUrl || record.validatedCompany;
+      const contactHref = record.enrichment?.phones?.[0]
+        ? `tel:${record.enrichment.phones[0].replace(/[^+\d]/g, "")}`
+        : searchUrl(`${searchBase} telefone contato`);
+      const copyText = [
+        record.name,
+        record.validatedCompany,
+        record.validatedTitle,
+        record.authority,
+        record.enrichment?.linkedinUrl,
+        record.enrichment?.websiteUrl,
+        record.enrichment?.emails?.[0],
+        record.enrichment?.phones?.[0]
+      ].filter(Boolean).join(" | ");
+      return `
+        <tr data-text="${escapeHtml(searchableText(record))}" data-match="${escapeHtml(record.match)}" data-departments="${escapeHtml(record.departments.join(" "))}">
+          <td class="index-cell">${record.id}</td>
+          <td class="name-cell">${link(record.name, `${searchBase} LinkedIn`)}</td>
+          <td><div class="link-list">${networkLinks(record)}</div></td>
+          <td>${emailLink(record)}</td>
+          <td><a class="pill ${record.match === "Partially Matched" ? "partial" : ""}" href="${searchUrl(`${record.match} ${record.name} ${record.validatedCompany}`)}" target="_blank" rel="noopener noreferrer">${escapeHtml(record.match)}</a></td>
+          <td>${link(record.originalCompany, record.originalCompany)}</td>
+          <td>${link(record.decisionTitle, `${searchBase} ${record.decisionTitle}`)}</td>
+          <td>${link(record.segment, `${record.segment} ${record.location}`)}</td>
+          <td>${link(record.location, `${record.location} saúde animal distribuidora`)}</td>
+          <td>${link(record.authority, `${searchBase} ${record.authority}`)}</td>
+          <td>${link(record.validatedCompany, companyHref)}</td>
+          <td>${link(record.validatedTitle, `${searchBase} ${record.validatedTitle}`)}</td>
+          <td>${departments(record)}</td>
+          <td>${countryLink(record)}</td>
+          <td>${enrichmentLinks(record)}</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn" type="button" data-copy="${escapeHtml(copyText)}">Copiar</button>
+              <a class="action-btn" href="${contactHref}" target="_blank" rel="noopener noreferrer">Contato</a>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    function populateDepartmentFilter() {
+      const depts = [...new Set(enrichedRecords.flatMap(record => record.departments))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+      deptFilter.insertAdjacentHTML("beforeend", depts.map(dept => `<option value="${escapeHtml(dept)}">${escapeHtml(dept)}</option>`).join(""));
+    }
+
+    function render() {
+      const query = searchInput.value.trim().toLowerCase();
+      const match = matchFilter.value;
+      const dept = deptFilter.value;
+      let fullVisible = 0;
+      let partialVisible = 0;
+
+      document.querySelectorAll("tbody tr").forEach(row => {
+        const rowMatch = row.dataset.match;
+        const rowDepartments = row.dataset.departments;
+        const visible = (match === "all" || rowMatch === match)
+          && (dept === "all" || rowDepartments.includes(dept))
+          && (!query || row.dataset.text.includes(query));
+        row.style.display = visible ? "" : "none";
+        if (visible && rowMatch === "Fully Matched") fullVisible += 1;
+        if (visible && rowMatch === "Partially Matched") partialVisible += 1;
+      });
+
+      fullCount.textContent = `${fullVisible} registro${fullVisible === 1 ? "" : "s"}`;
+      partialCount.textContent = `${partialVisible} registro${partialVisible === 1 ? "" : "s"}`;
+      emptyState.style.display = fullVisible + partialVisible === 0 ? "block" : "none";
+    }
+
+    function setMetrics() {
+      const full = enrichedRecords.filter(record => record.match === "Fully Matched").length;
+      const partial = enrichedRecords.filter(record => record.match === "Partially Matched").length;
+      const enriched = enrichedRecords.filter(record => record.enrichment && record.enrichment.enrichmentStatus !== "pending").length;
+      document.querySelector("#totalMetric").textContent = enrichedRecords.length;
+      document.querySelector("#fullMetric").textContent = full;
+      document.querySelector("#partialMetric").textContent = partial;
+      document.querySelector("#authorityMetric").textContent = enriched;
+    }
+
+    fullyBody.innerHTML = enrichedRecords.filter(record => record.match === "Fully Matched").map(rowHtml).join("");
+    partialBody.innerHTML = enrichedRecords.filter(record => record.match === "Partially Matched").map(rowHtml).join("");
+    populateDepartmentFilter();
+    setMetrics();
+    render();
+
+    [searchInput, matchFilter, deptFilter].forEach(control => control.addEventListener("input", render));
+
+    document.addEventListener("click", async event => {
+      const button = event.target.closest("[data-copy]");
+      if (!button) return;
+      await navigator.clipboard.writeText(button.dataset.copy);
+      const previous = button.textContent;
+      button.textContent = "Copiado";
+      setTimeout(() => {
+        button.textContent = previous;
+      }, 1200);
+    });
+  </script>
+</body>
+</html>
