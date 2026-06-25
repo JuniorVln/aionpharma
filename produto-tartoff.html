@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tartoff Gel Dental — Aion Pharma</title>
+  <meta name="description" content="Tartoff: gel dental para cães e gatos que remove tártaro e placa bacteriana sem escovação forçada. Formulação com Aloe Vera, Chá Verde e Menta." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🐾</text></svg>" />
+  <style>
+    /* Breadcrumb */
+    .breadcrumb {
+      padding: var(--space-5) 0;
+      border-bottom: 1px solid var(--clr-border);
+    }
+    .breadcrumb-list {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 0.875rem;
+    }
+    .breadcrumb-list a { color: var(--clr-text-muted); transition: color var(--dur-fast) var(--ease); }
+    .breadcrumb-list a:hover { color: var(--clr-primary); }
+    .breadcrumb-sep { color: var(--clr-text-muted); }
+    .breadcrumb-current { color: var(--clr-text); font-weight: 500; }
+
+    /* Product Layout */
+    .product-page {
+      padding: var(--space-12) 0 var(--space-20);
+    }
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+
+    /* Product Images */
+    .product-gallery {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: sticky;
+      top: calc(var(--header-h) + 1.5rem);
+    }
+    .product-main-image {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, var(--clr-cream) 0%, var(--clr-primary-pale) 100%);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      border: 1px solid var(--clr-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .product-main-image img {
+      width: 85%;
+      height: 85%;
+      object-fit: contain;
+      transition: transform var(--dur-slow) var(--ease);
+      filter: drop-shadow(0 16px 32px rgba(45,74,53,.15));
+    }
+    .product-main-image:hover img { transform: scale(1.04); }
+
+    .product-thumbnails {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-3);
+    }
+    .product-thumb {
+      aspect-ratio: 1;
+      background: var(--clr-cream);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 2px solid var(--clr-border);
+      cursor: pointer;
+      transition: border-color var(--dur-fast) var(--ease);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .product-thumb.active { border-color: var(--clr-primary); }
+    .product-thumb img { width: 80%; height: 80%; object-fit: contain; }
+
+    /* Product Info */
+    .product-info {}
+
+    .product-info-top {
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-6);
+      border-bottom: 1px solid var(--clr-border);
+    }
+
+    .product-brand {
+      font-family: var(--font-heading);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--clr-gold);
+      margin-bottom: var(--space-2);
+    }
+
+    .product-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 800;
+      margin-bottom: var(--space-4);
+      line-height: 1.2;
+    }
+
+    .product-rating-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .product-rating-row .stars { font-size: 1rem; }
+    .product-rating-row .rating-text { font-size: 0.875rem; color: var(--clr-text-muted); }
+
+    .product-description {
+      font-size: 1rem;
+      color: var(--clr-text-muted);
+      line-height: 1.7;
+    }
+
+    /* Price Block */
+    .price-block {
+      margin-bottom: var(--space-6);
+    }
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-3);
+      margin-bottom: var(--space-2);
+    }
+    .price-main {
+      font-family: var(--font-heading);
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--clr-primary);
+      line-height: 1;
+    }
+    .price-compare {
+      font-size: 1.125rem;
+      color: var(--clr-text-muted);
+      text-decoration: line-through;
+    }
+    .price-discount {
+      font-family: var(--font-heading);
+      font-size: 0.875rem;
+      font-weight: 700;
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+    .price-note {
+      font-size: 0.875rem;
+      color: var(--clr-text-muted);
+    }
+
+    /* Size/Qty */
+    .option-group {
+      margin-bottom: var(--space-5);
+    }
+    .option-label {
+      font-family: var(--font-heading);
+      font-size: 0.9375rem;
+      font-weight: 700;
+      margin-bottom: var(--space-3);
+    }
+    .option-choices {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+    .option-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--clr-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-heading);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--clr-text);
+      background: var(--clr-white);
+      transition: all var(--dur-fast) var(--ease);
+    }
+    .option-btn:hover { border-color: var(--clr-primary); color: var(--clr-primary); }
+    .option-btn.selected { border-color: var(--clr-primary); background: var(--clr-primary-pale); color: var(--clr-primary); }
+
+    /* Qty Selector */
+    .qty-selector {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 2px solid var(--clr-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      width: fit-content;
+    }
+    .qty-btn-lg {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--clr-cream);
+      font-size: 1.25rem;
+      font-weight: 700;
+      transition: background var(--dur-fast) var(--ease);
+      border: none;
+      cursor: pointer;
+    }
+    .qty-btn-lg:hover { background: var(--clr-primary-pale); }
+    .qty-display {
+      width: 52px;
+      text-align: center;
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--clr-dark);
+      background: var(--clr-white);
+      border: none;
+      padding: 0 var(--space-2);
+    }
+
+    /* Buy Actions */
+    .buy-actions {
+      display: flex;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+    .buy-actions .btn { flex: 1; min-width: 140px; justify-content: center; }
+
+    /* Shipping Info */
+    .shipping-info {
+      background: var(--clr-primary-pale);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4) var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+      font-size: 0.9375rem;
+      color: var(--clr-text);
+    }
+    .shipping-info svg { color: var(--clr-primary); flex-shrink: 0; }
+
+    /* Quick Benefits */
+    .quick-benefits {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+    .quick-benefit {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 0.875rem;
+      color: var(--clr-text-muted);
+    }
+    .quick-benefit svg { color: var(--clr-primary); flex-shrink: 0; }
+
+    /* Tabs */
+    .product-tabs {
+      margin-top: var(--space-16);
+      border-top: 2px solid var(--clr-border);
+    }
+    .tab-buttons {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--clr-border);
+    }
+    .tab-btn {
+      padding: var(--space-4) var(--space-6);
+      font-family: var(--font-heading);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--clr-text-muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all var(--dur-fast) var(--ease);
+    }
+    .tab-btn.active {
+      color: var(--clr-primary);
+      border-bottom-color: var(--clr-primary);
+    }
+    .tab-btn:hover:not(.active) { color: var(--clr-text); }
+
+    .tab-content { display: none; padding: var(--space-8) 0; }
+    .tab-content.active { display: block; }
+
+    /* Ingredients Grid */
+    .ingredients-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-5);
+    }
+    .ingredient-card {
+      display: flex;
+      gap: var(--space-4);
+      padding: var(--space-5);
+      background: var(--clr-white);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+    }
+    .ingredient-icon { font-size: 2rem; flex-shrink: 0; }
+    .ingredient-card h4 { font-family: var(--font-heading); font-weight: 700; margin-bottom: var(--space-1); }
+    .ingredient-card p { font-size: 0.875rem; color: var(--clr-text-muted); line-height: 1.5; }
+
+    /* How to use steps */
+    .how-to-steps {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+    .how-to-step {
+      display: flex;
+      gap: var(--space-5);
+      padding: var(--space-5);
+      background: var(--clr-white);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+    }
+    .step-number {
+      width: 40px;
+      height: 40px;
+      background: var(--clr-primary);
+      color: var(--clr-white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.125rem;
+      flex-shrink: 0;
+    }
+    .step-content h4 { font-family: var(--font-heading); font-weight: 700; margin-bottom: var(--space-1); }
+    .step-content p { font-size: 0.875rem; color: var(--clr-text-muted); line-height: 1.5; }
+
+    /* Reviews */
+    .reviews-list { display: flex; flex-direction: column; gap: var(--space-5); }
+    .review-card {
+      padding: var(--space-5);
+      background: var(--clr-white);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+    }
+    .review-header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+    .review-avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--clr-primary-pale);
+      display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;
+    }
+    .review-author { font-family: var(--font-heading); font-weight: 700; font-size: 0.9375rem; }
+    .review-date { font-size: 0.8125rem; color: var(--clr-text-muted); }
+    .review-text { font-size: 0.9375rem; color: var(--clr-text); line-height: 1.7; }
+    .review-verified { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #2e7d32; font-weight: 600; margin-top: var(--space-2); }
+
+    /* Related products */
+    .related-section { padding: var(--space-16) 0 var(--space-20); background: var(--clr-cream); }
+    .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-5); }
+
+    @media (max-width: 768px) {
+      .product-layout { grid-template-columns: 1fr; }
+      .product-gallery { position: static; }
+      .ingredients-grid { grid-template-columns: 1fr; }
+      .related-grid { grid-template-columns: repeat(2, 1fr); }
+      .quick-benefits { grid-template-columns: 1fr; }
+      .buy-actions .btn { min-width: unset; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Announcement Bar -->
+<div id="announcement-bar">
+  🐾 <strong>FRETE GRÁTIS</strong> em compras acima de R$ 99 &nbsp;|&nbsp; Use o cupom <strong>AION10</strong> e ganhe 10% OFF
+</div>
+
+<!-- Header -->
+<header id="header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-name">AION PHARMA</span>
+        <span class="logo-tagline">Ciência para Pets</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Início</a>
+        <a href="produtos.html" class="active">Produtos</a>
+        <a href="index.html#categories">Categorias</a>
+        <a href="index.html#blog">Blog</a>
+        <a href="index.html#footer">Sobre</a>
+        <a href="index.html#footer">Contato</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="search-btn" aria-label="Buscar">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+        <button class="icon-btn cart-btn" id="cart-btn" aria-label="Carrinho">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <span class="cart-count" id="cart-count">0</span>
+        </button>
+      </div>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+<nav class="mobile-nav" id="mobile-nav">
+  <a href="index.html" onclick="closeMobileNav()">Início</a>
+  <a href="produtos.html" onclick="closeMobileNav()">Produtos</a>
+</nav>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb" style="background:var(--clr-cream)">
+  <div class="container">
+    <ol class="breadcrumb-list" aria-label="Localização na loja">
+      <li><a href="index.html">Início</a></li>
+      <li class="breadcrumb-sep" aria-hidden="true">/</li>
+      <li><a href="produtos.html">Produtos</a></li>
+      <li class="breadcrumb-sep" aria-hidden="true">/</li>
+      <li><a href="produtos.html?categoria=higiene-bucal">Higiene Bucal</a></li>
+      <li class="breadcrumb-sep" aria-hidden="true">/</li>
+      <li class="breadcrumb-current" aria-current="page">Tartoff Gel Dental</li>
+    </ol>
+  </div>
+</div>
+
+<!-- Product Page -->
+<div class="product-page">
+  <div class="container">
+    <div class="product-layout">
+
+      <!-- Gallery -->
+      <div class="product-gallery">
+        <div class="product-main-image" id="main-image-wrap">
+          <img src="assets/images/tartoff_product.png" alt="Tartoff Gel Dental para Cães e Gatos" id="main-product-img" />
+        </div>
+        <div class="product-thumbnails">
+          <div class="product-thumb active" onclick="setThumb(this, 'assets/images/tartoff_product.png')">
+            <img src="assets/images/tartoff_product.png" alt="Tartoff — visão 1" />
+          </div>
+          <div class="product-thumb" onclick="setThumb(this, '')">🦷</div>
+          <div class="product-thumb" onclick="setThumb(this, '')">🌿</div>
+          <div class="product-thumb" onclick="setThumb(this, '')">📋</div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="product-info">
+        <div class="product-info-top">
+          <div class="product-brand">Aion Pharma</div>
+          <h1 class="product-title">Tartoff Gel Dental</h1>
+          <div class="product-rating-row">
+            <span class="stars">★★★★★</span>
+            <span class="rating-text">4.9 — 127 avaliações</span>
+            <span class="badge badge-green">Em estoque</span>
+          </div>
+          <p class="product-description">
+            Gel de higiene oral formulado com ingredientes naturais que remove a placa bacteriana e combate o tártaro de forma gentil, sem necessidade de escovação forçada. Indicado para cães e gatos de todas as raças e idades.
+          </p>
+        </div>
+
+        <!-- Price -->
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price-main">R$ 49,90</span>
+            <span class="price-compare">R$ 59,90</span>
+            <span class="price-discount">−17%</span>
+          </div>
+          <p class="price-note">ou 3× de R$ 16,63 sem juros no cartão</p>
+        </div>
+
+        <!-- Options -->
+        <div class="option-group">
+          <div class="option-label">Tamanho</div>
+          <div class="option-choices">
+            <button class="option-btn selected">60g — Individual</button>
+            <button class="option-btn" onclick="selectOption(this)">180g — Kit com 3</button>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-label">Quantidade</div>
+          <div class="qty-selector">
+            <button class="qty-btn-lg" onclick="changeProductQty(-1)" aria-label="Diminuir">−</button>
+            <span class="qty-display" id="product-qty">1</span>
+            <button class="qty-btn-lg" onclick="changeProductQty(1)" aria-label="Aumentar">+</button>
+          </div>
+        </div>
+
+        <!-- Buy Actions -->
+        <div class="buy-actions">
+          <button class="btn btn-gold btn-lg" id="add-cart-main" onclick="addProductToCart()">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            Adicionar ao Carrinho
+          </button>
+          <button class="btn btn-primary btn-lg" onclick="buyNow()">Comprar Agora</button>
+        </div>
+
+        <!-- Shipping -->
+        <div class="shipping-info">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="3" width="15" height="13" rx="2"/>
+            <path d="M16 8h4l3 3v4h-7V8z"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+          <span>📦 Frete grátis para compras acima de R$ 99 &nbsp;·&nbsp; Entrega em 3-7 dias úteis</span>
+        </div>
+
+        <!-- Quick Benefits -->
+        <div class="quick-benefits">
+          <div class="quick-benefit">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            Sem flúor nem parabenos
+          </div>
+          <div class="quick-benefit">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            Seguro se ingerido
+          </div>
+          <div class="quick-benefit">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            Aprovado por veterinários
+          </div>
+          <div class="quick-benefit">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            Troca garantida em 30 dias
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="product-tabs">
+      <div class="tab-buttons" role="tablist">
+        <button class="tab-btn active" role="tab" onclick="showTab('ingredientes', this)">Ingredientes</button>
+        <button class="tab-btn" role="tab" onclick="showTab('como-usar', this)">Como Usar</button>
+        <button class="tab-btn" role="tab" onclick="showTab('avaliacoes', this)">Avaliações (127)</button>
+      </div>
+
+      <!-- Ingredientes -->
+      <div class="tab-content active" id="tab-ingredientes">
+        <div class="ingredients-grid">
+          <div class="ingredient-card">
+            <div class="ingredient-icon">🌿</div>
+            <div>
+              <h4>Aloe Vera</h4>
+              <p>Propriedades anti-inflamatórias e cicatrizantes. Protege as gengivas e reduz a irritação causada pelo acúmulo de bactérias.</p>
+            </div>
+          </div>
+          <div class="ingredient-card">
+            <div class="ingredient-icon">🍵</div>
+            <div>
+              <h4>Extrato de Chá Verde</h4>
+              <p>Rico em catequinas com ação antibacteriana comprovada. Ajuda a inibir o crescimento de bactérias causadoras do tártaro.</p>
+            </div>
+          </div>
+          <div class="ingredient-card">
+            <div class="ingredient-icon">🌱</div>
+            <div>
+              <h4>Alecrim</h4>
+              <p>Antisséptico natural com ação antifúngica. Complementa a fórmula no combate à flora bacteriana bucal indesejada.</p>
+            </div>
+          </div>
+          <div class="ingredient-card">
+            <div class="ingredient-icon">❄️</div>
+            <div>
+              <h4>Menta</h4>
+              <p>Proporciona sabor palatável que os pets aceitam facilmente, além de deixar o hálito fresco e agradável.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Como Usar -->
+      <div class="tab-content" id="tab-como-usar">
+        <div class="how-to-steps">
+          <div class="how-to-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h4>Prepare o ambiente</h4>
+              <p>Escolha um momento calmo do dia. Deixe o pet relaxado e confortável, de preferência após uma refeição leve.</p>
+            </div>
+          </div>
+          <div class="how-to-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h4>Aplique o gel</h4>
+              <p>Coloque uma pequena quantidade de Tartoff (equivalente a uma ervilha) na ponta do dedo ou em um dedal dental. Aplique diretamente nos dentes e gengivas do pet.</p>
+            </div>
+          </div>
+          <div class="how-to-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h4>Massageie levemente</h4>
+              <p>Faça movimentos circulares suaves por 30 a 60 segundos. Não é necessário enxaguar — o produto pode ser ingerido com segurança.</p>
+            </div>
+          </div>
+          <div class="how-to-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h4>Repita diariamente</h4>
+              <p>Para melhores resultados, aplique 1 vez ao dia. Resultados visíveis a partir de 2 a 4 semanas de uso contínuo.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Avaliações -->
+      <div class="tab-content" id="tab-avaliacoes">
+        <div class="reviews-list">
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar">🐕</div>
+              <div>
+                <div class="review-author">Camila Ferreira</div>
+                <div class="review-date">12 de junho de 2026</div>
+              </div>
+              <span class="stars" style="margin-left:auto">★★★★★</span>
+            </div>
+            <p class="review-text">
+              Minha cachorra tinha um problema sério de tártaro e mau hálito. Em 3 semanas de Tartoff, os dentes voltaram a estar brancos! O veterinário ficou impressionado na consulta e perguntou o que eu estava usando.
+            </p>
+            <span class="review-verified">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Compra verificada
+            </span>
+          </div>
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar">🐈</div>
+              <div>
+                <div class="review-author">Marcos Oliveira</div>
+                <div class="review-date">5 de junho de 2026</div>
+              </div>
+              <span class="stars" style="margin-left:auto">★★★★★</span>
+            </div>
+            <p class="review-text">
+              Minha gata é impossível de tratar. Mas com o Tartoff foi diferente — ela lambeu o gel no dedo sem problema. Aplicamos diariamente e em 4 semanas o hálito estava muito melhor. Produto excelente!
+            </p>
+            <span class="review-verified">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Compra verificada
+            </span>
+          </div>
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar">🐕</div>
+              <div>
+                <div class="review-author">Ana Lima</div>
+                <div class="review-date">28 de maio de 2026</div>
+              </div>
+              <span class="stars" style="margin-left:auto">★★★★★</span>
+            </div>
+            <p class="review-text">
+              Tenho 3 pets (2 gatos e 1 cachorro). Comprei o Kit Família e já estou no segundo mês de uso. Os resultados são reais — reduziu bastante o tártaro em todos eles e o hálito melhorou muito. Super recomendo!
+            </p>
+            <span class="review-verified">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Compra verificada
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Related Products -->
+<section class="related-section">
+  <div class="container">
+    <div class="section-header reveal" style="margin-bottom:var(--space-10)">
+      <span class="section-tag">Você Pode Gostar</span>
+      <h2 class="heading-1">Produtos Relacionados</h2>
+    </div>
+    <div class="related-grid">
+      <div class="product-card reveal">
+        <div class="product-image"><img src="assets/images/pellet_product.png" alt="Pellet Higiênico" loading="lazy" /><div class="product-badges"><span class="badge badge-green">Novidade</span></div><button class="product-wishlist" aria-label="Favoritar"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button></div>
+        <div class="product-body"><span class="product-animal">🐈 Gatos</span><h3 class="product-name">Pellet Higiênico Aion</h3><p class="product-desc">Alta absorção e controle de odores para ambientes sempre limpos.</p><div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(89)</span></div><div class="product-footer"><div class="product-price"><span class="price-old">R$ 34,90</span><span class="price-current">R$ 29,90</span></div><button class="add-to-cart-btn" onclick="addToCart('pellet','Pellet Higiênico Aion',29.90,'assets/images/pellet_product.png')" aria-label="Adicionar ao carrinho"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+      </div>
+      <div class="product-card reveal reveal-delay-1">
+        <div class="product-image" style="background:var(--clr-primary-pale);display:flex;align-items:center;justify-content:center;font-size:5rem;">🦷</div>
+        <div class="product-body"><span class="product-animal">🐕 Cães & 🐈 Gatos</span><h3 class="product-name">Tartoff Kit Família</h3><p class="product-desc">3 unidades com desconto especial. Ideal para múltiplos pets.</p><div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(54)</span></div><div class="product-footer"><div class="product-price"><span class="price-old">R$ 149,70</span><span class="price-current">R$ 119,90</span></div><button class="add-to-cart-btn" onclick="addToCart('tartoff-kit','Tartoff Kit Família',119.90,'')" aria-label="Adicionar ao carrinho"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+      </div>
+      <div class="product-card reveal reveal-delay-2">
+        <div class="product-image" style="background:var(--clr-cream);display:flex;align-items:center;justify-content:center;font-size:5rem;">📦</div>
+        <div class="product-body"><span class="product-animal">🐈 Gatos</span><h3 class="product-name">Pellet Kit Mensal</h3><p class="product-desc">4 embalagens. Suprimento completo por 1 mês com desconto.</p><div class="product-rating"><span class="stars">★★★★☆</span><span class="rating-count">(32)</span></div><div class="product-footer"><div class="product-price"><span class="price-old">R$ 139,60</span><span class="price-current">R$ 109,90</span></div><button class="add-to-cart-btn" onclick="addToCart('pellet-kit','Pellet Kit Mensal',109.90,'')" aria-label="Adicionar ao carrinho"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer id="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html" class="logo"><span class="logo-name">AION PHARMA</span><span class="logo-tagline">Ciência para Pets</span></a>
+        <p>Desenvolvemos produtos veterinários com rigor científico e carinho pelos animais.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" aria-label="Instagram"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+          <a href="#" class="social-link" aria-label="WhatsApp"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col"><h4>Produtos</h4><ul class="footer-links"><li><a href="produto-tartoff.html">Tartoff</a></li><li><a href="produtos.html">Pellet Higiênico</a></li><li><a href="produtos.html">Todos os Produtos</a></li></ul></div>
+      <div class="footer-col"><h4>Empresa</h4><ul class="footer-links"><li><a href="#">Sobre</a></li><li><a href="index.html#blog">Blog</a></li></ul></div>
+      <div class="footer-col"><h4>Ajuda</h4><ul class="footer-links"><li><a href="#">Entrega</a></li><li><a href="#">Trocas</a></li><li><a href="#">Privacidade</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Aion Pharma. Todos os direitos reservados.</p>
+      <div class="footer-seals"><span>🔒 Site Seguro</span><span>🛡️ Compra Protegida</span></div>
+    </div>
+  </div>
+</footer>
+
+<!-- Cart Drawer -->
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cart-drawer" role="dialog" aria-label="Carrinho" aria-modal="true">
+  <div class="cart-drawer-header">
+    <h3>🛒 Seu Carrinho</h3>
+    <button class="cart-close" onclick="closeCart()" aria-label="Fechar"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="cart-items" id="cart-items-container">
+    <div class="cart-empty" id="cart-empty">
+      <div class="empty-icon">🐾</div>
+      <p>Seu carrinho está vazio</p>
+      <button class="btn btn-primary btn-sm" onclick="closeCart()">Continuar Comprando</button>
+    </div>
+  </div>
+  <div class="cart-footer" id="cart-footer" style="display:none">
+    <div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-value" id="cart-total-display">R$ 0,00</span></div>
+    <button class="btn btn-gold cart-checkout-btn" onclick="handleCheckout()">Finalizar via WhatsApp</button>
+  </div>
+</div>
+<div class="toast-container" id="toast-container"></div>
+
+<script src="script.js"></script>
+<script>
+let productQty = 1;
+
+function changeProductQty(delta) {
+  productQty = Math.max(1, productQty + delta);
+  document.getElementById('product-qty').textContent = productQty;
+}
+
+function addProductToCart() {
+  for (let i = 0; i < productQty; i++) {
+    addToCart('tartoff', 'Tartoff Gel Dental', 49.90, 'assets/images/tartoff_product.png');
+  }
+}
+
+function buyNow() {
+  addProductToCart();
+  handleCheckout();
+}
+
+function selectOption(btn) {
+  btn.closest('.option-choices').querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function setThumb(el, src) {
+  el.closest('.product-thumbnails').querySelectorAll('.product-thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const img = document.getElementById('main-product-img');
+  if (img && src) {
+    img.src = src;
+  }
+}
+
+function showTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabId)?.classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

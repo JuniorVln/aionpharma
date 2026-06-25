@@ -1,0 +1,14 @@
+{
+  "name": "aionpharma",
+  "version": "1.0.0",
+  "description": "Loja Aion Pharma — site estático + backend serverless integrado ao Tiny ERP e Mercado Pago",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

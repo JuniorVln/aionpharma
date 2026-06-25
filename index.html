@@ -1,10 +1,610 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <meta http-equiv="refresh" content="0; url=Prospects/decisores-veterinarios.html" />
-  <title>Aion Pharma</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aion Pharma — Saúde e Bem-Estar para o Seu Pet</title>
+  <meta name="description" content="Produtos veterinários de alta qualidade para cães e gatos. Tartoff, Pellet Higiênico e muito mais. Formulação científica com amor pelos animais." />
+  <meta name="keywords" content="produtos pet, higiene bucal cão, pellet higiênico gato, tartaro pet, aion pharma" />
+  <meta property="og:title" content="Aion Pharma — Saúde e Bem-Estar para o Seu Pet" />
+  <meta property="og:description" content="Produtos veterinários formulados por especialistas para o cuidado completo do seu pet." />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="style.css?v=2" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🐾</text></svg>" />
 </head>
 <body>
-  <p>Redirecionando para a lista de decisores...</p>
+
+<!-- ───── Hero ───── -->
+<section id="hero" aria-label="Seção principal">
+  <!-- ───── Header ───── -->
+  <header id="header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="logo" aria-label="Aion Pharma Home">
+          <span class="logo-name">AION PHARMA</span>
+          <span class="logo-tagline">Ciência para Pets</span>
+        </a>
+
+        <nav class="nav-links" aria-label="Navegação principal">
+          <a href="index.html" class="active">Início</a>
+          <a href="produtos.html">Produtos</a>
+          <a href="#categories">Categorias</a>
+          <a href="#blog">Blog</a>
+          <a href="#footer">Sobre</a>
+          <a href="#footer">Contato</a>
+        </nav>
+
+        <div class="header-actions">
+          <button class="icon-btn" aria-label="Buscar produtos" id="search-btn">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </button>
+          <button class="icon-btn cart-btn" aria-label="Abrir carrinho" id="cart-btn">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+            <span class="cart-count" id="cart-count">0</span>
+          </button>
+          <a href="produtos.html" class="btn btn-primary btn-sm">Ver Produtos</a>
+        </div>
+
+        <button class="menu-toggle" id="menu-toggle" aria-label="Menu mobile" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Nav -->
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Navegação mobile">
+    <a href="index.html" onclick="closeMobileNav()">Início</a>
+    <a href="produtos.html" onclick="closeMobileNav()">Produtos</a>
+    <a href="#categories" onclick="closeMobileNav()">Categorias</a>
+    <a href="#blog" onclick="closeMobileNav()">Blog</a>
+    <a href="#footer" onclick="closeMobileNav()">Sobre</a>
+    <a href="#footer" onclick="closeMobileNav()">Contato</a>
+    <a href="produtos.html" class="btn btn-primary" style="margin-top:1rem;justify-content:center">Ver Produtos →</a>
+  </nav>
+
+  <div class="hero-banner-slider" aria-hidden="true">
+    <div class="hero-banner-slide hero-banner-slide-1">
+      <img src="assets/images/hero-tartoff-slide-1.png?v=2" alt="" loading="eager" />
+    </div>
+    <div class="hero-banner-slide hero-banner-slide-2">
+      <img src="assets/images/hero-tartoff-slide-2.png?v=2" alt="" loading="lazy" />
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge">Cuidado veterinário para a rotina pet</div>
+      <h1 class="display-1">
+        Saúde e<br /><span>bem-estar</span><br />para seu pet
+      </h1>
+      <p class="hero-subtitle">
+        Produtos de alta eficácia científica, desenvolvidos com amor e responsabilidade para o cuidado completo de cães e gatos.
+      </p>
+      <form class="hero-search" action="produtos.html" role="search">
+        <input type="search" name="busca" placeholder="Buscar por produto, necessidade ou pet..." aria-label="Buscar produtos" />
+        <button type="submit" aria-label="Buscar">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+        </button>
+      </form>
+      <div class="hero-cta">
+        <a href="produtos.html" class="btn btn-gold btn-lg">
+          Ver Produtos
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="#featured-product" class="btn btn-outline-white btn-lg">Conheça o Tartoff</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Trust Bar ───── -->
+<section id="trust-bar" aria-label="Diferenciais">
+  <div class="container">
+    <div class="trust-items">
+      <div class="trust-item reveal">
+        <div class="trust-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <div class="trust-text">
+          <strong>Formulação Científica</strong>
+          <span>Aprovado por médicos veterinários</span>
+        </div>
+      </div>
+      <div class="trust-item reveal reveal-delay-1">
+        <div class="trust-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+          </svg>
+        </div>
+        <div class="trust-text">
+          <strong>Entrega em todo Brasil</strong>
+          <span>Frete grátis acima de R$ 99</span>
+        </div>
+      </div>
+      <div class="trust-item reveal reveal-delay-2">
+        <div class="trust-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </div>
+        <div class="trust-text">
+          <strong>Troca Garantida</strong>
+          <span>30 dias sem complicação</span>
+        </div>
+      </div>
+      <div class="trust-item reveal reveal-delay-3">
+        <div class="trust-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+        </div>
+        <div class="trust-text">
+          <strong>Suporte via WhatsApp</strong>
+          <span>Atendimento especializado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Categories ───── -->
+<section id="categories" class="section">
+  <div class="container">
+    <div class="section-header text-center reveal">
+      <span class="section-tag">Nossas Soluções</span>
+      <h2 class="heading-1">O Cuidado Certo para Cada Necessidade</h2>
+      <p>Produtos desenvolvidos para resolver problemas reais na rotina do seu pet.</p>
+    </div>
+    <div class="categories-grid">
+      <a href="produtos.html?categoria=higiene-bucal" class="category-card reveal">
+        <div class="category-icon"><span>🦷</span></div>
+        <h3>Higiene Bucal</h3>
+        <p>Combata o tártaro e a placa bacteriana sem estresse. Géis e soluções de aplicação simples para cães e gatos.</p>
+        <span class="category-link">
+          Ver produtos
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </span>
+      </a>
+      <a href="produtos.html?categoria=higiene-lar" class="category-card reveal reveal-delay-1">
+        <div class="category-icon"><span>🏠</span></div>
+        <h3>Higiene do Lar</h3>
+        <p>Pellets higiênicos de alta absorção para gatos que garantem um ambiente limpo, fresco e sem odores indesejados.</p>
+        <span class="category-link">
+          Ver produtos
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </span>
+      </a>
+      <a href="produtos.html?categoria=saude-bem-estar" class="category-card reveal reveal-delay-2">
+        <div class="category-icon"><span>❤️</span></div>
+        <h3>Saúde & Bem-Estar</h3>
+        <p>Suplementos e produtos complementares para manter a vitalidade e a qualidade de vida do seu companheiro animal.</p>
+        <span class="category-link">
+          Ver produtos
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Featured Product: Tartoff ───── -->
+<section id="featured-product" class="section">
+  <div class="featured-deco featured-deco-1"></div>
+  <div class="featured-deco featured-deco-2"></div>
+  <div class="container">
+    <div class="featured-inner">
+      <div class="featured-content">
+        <span class="badge badge-gold">⭐ Produto Mais Vendido</span>
+        <h2 class="display-2 reveal">
+          Diga Adeus ao<br /><span>Tártaro</span> do Seu Pet
+        </h2>
+        <p class="reveal">
+          O <strong>Tartoff</strong> é um gel de higiene oral formulado com ingredientes naturais — Aloe Vera, Chá Verde, Alecrim e Menta — para remover a placa bacteriana e combater o tártaro de forma gentil, sem necessidade de escovação forçada.
+        </p>
+        <div class="featured-benefits reveal">
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            Para cães e gatos de todas as raças e idades
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            Sem fluoreto, sem parabenos — seguro se ingerido
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            Resultados visíveis em 2 a 4 semanas de uso
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            Sabor palatável — os pets adoram!
+          </div>
+        </div>
+        <div class="featured-price reveal">
+          <span class="per">a partir de</span>
+          <span class="currency">R$</span>
+          <span class="amount">45<sup style="font-size:1.5rem;font-weight:700">,00</sup></span>
+        </div>
+        <div class="featured-actions reveal">
+          <a href="produtos.html" class="btn btn-gold btn-lg">
+            Ver a Linha TartOff
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a href="produto-tartoff.html" class="btn btn-outline-white btn-lg">Ver Detalhes</a>
+        </div>
+      </div>
+      <div class="featured-image-wrap reveal reveal-delay-2">
+        <div class="product-glow"></div>
+        <img src="assets/images/tartoff_product.png" alt="Tartoff — Gel Dental para Pets" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Products Grid ───── -->
+<section id="products" class="section">
+  <div class="container">
+    <div class="products-header">
+      <div class="section-header reveal" style="margin-bottom:0">
+        <span class="section-tag">Catálogo</span>
+        <h2 class="heading-1">Nossos Produtos</h2>
+      </div>
+      <a href="produtos.html" class="btn btn-outline reveal">Ver Todos →</a>
+    </div>
+    <div class="products-grid" id="products-grid">
+      <!-- Preenchido dinamicamente via /api/produtos (script.js) -->
+    </div>
+  </div>
+</section>
+
+<!-- ───── Why Aion ───── -->
+<section id="why-aion" class="section">
+  <div class="container">
+    <div class="why-inner">
+      <div class="why-image reveal">
+        <img src="assets/images/hero_pets.png" alt="Pets saudáveis e felizes com Aion Pharma" />
+        <div class="why-badge-float">
+          <div class="big-number">98%</div>
+          <div class="big-label">de satisfação dos tutores</div>
+        </div>
+      </div>
+      <div class="why-content">
+        <div class="section-header" style="margin-bottom:var(--space-6)">
+          <span class="section-tag">Por Que Escolher</span>
+          <h2 class="heading-1 reveal">A Ciência a Serviço do Amor pelos Pets</h2>
+          <p class="reveal">Nossos produtos são desenvolvidos com rigor científico e testados para garantir eficácia e segurança em cada aplicação.</p>
+        </div>
+        <div class="why-items">
+          <div class="why-item reveal">
+            <div class="why-item-icon">🔬</div>
+            <div class="why-item-text">
+              <strong>Formulação Desenvolvida por Veterinários</strong>
+              <p>Cada produto é criado com base em evidências científicas e validado por profissionais especializados em medicina veterinária.</p>
+            </div>
+          </div>
+          <div class="why-item reveal reveal-delay-1">
+            <div class="why-item-icon">🌿</div>
+            <div class="why-item-text">
+              <strong>Ingredientes Naturais e Seguros</strong>
+              <p>Priorizamos extratos naturais eficazes, sem substâncias tóxicas. Nossos produtos são seguros mesmo se ingeridos pelos pets.</p>
+            </div>
+          </div>
+          <div class="why-item reveal reveal-delay-2">
+            <div class="why-item-icon">📊</div>
+            <div class="why-item-text">
+              <strong>Resultados Comprovados</strong>
+              <p>Mais de 2.000 tutores já notaram melhora real na saúde bucal e na higiene dos seus pets com o uso contínuo dos nossos produtos.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Testimonials ───── -->
+<section id="testimonials" class="section">
+  <div class="container">
+    <div class="section-header text-center reveal">
+      <span class="section-tag">Depoimentos</span>
+      <h2 class="heading-1">Tutores que Já Confiam na Aion</h2>
+      <p>Histórias reais de pets que tiveram a saúde transformada.</p>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">
+          "Minha cachorra sofria muito com mau hálito e tártaro acumulado. Depois de apenas 3 semanas usando o Tartoff, a diferença foi incrível! Os dentes voltaram a ficar brancos e ela até permite que a gente aproxime o focinho agora."
+        </p>
+        <div class="testimonial-author">
+          <img src="assets/images/testimonial_dog.png" alt="Thor, Golden Retriever" class="testimonial-avatar" loading="lazy" />
+          <div>
+            <div class="testimonial-name">Camila Ferreira</div>
+            <div class="testimonial-pet">Tutora do Thor, 4 anos 🐕</div>
+          </div>
+          <span class="testimonial-product-tag">Tartoff</span>
+        </div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-1">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">
+          "Tinha desistido de pellets porque todos que testei eram ruins. O Pellet Higiênico Aion é diferente — absorve muito bem, não espirra por todo lado e o cheiro de amônia sumiu completamente. Minha gata aprovou de primeira!"
+        </p>
+        <div class="testimonial-author">
+          <img src="assets/images/testimonial_cat.png" alt="Luna, Gata" class="testimonial-avatar" loading="lazy" />
+          <div>
+            <div class="testimonial-name">Roberto Santos</div>
+            <div class="testimonial-pet">Tutor da Luna, 2 anos 🐈</div>
+          </div>
+          <span class="testimonial-product-tag">Pellet</span>
+        </div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-2">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">
+          "Tenho dois gatos e um cachorro, então precisava de algo que funcionasse para todos. Comprei o Kit Família do Tartoff e agora higiene bucal virou parte da rotina deles. O veterinário ficou impressionado na última consulta!"
+        </p>
+        <div class="testimonial-author">
+          <img src="assets/images/testimonial_dog.png" alt="Pets da Ana" class="testimonial-avatar" loading="lazy" />
+          <div>
+            <div class="testimonial-name">Ana Claudia Lima</div>
+            <div class="testimonial-pet">Tutora de 3 pets 🐕🐈🐈</div>
+          </div>
+          <span class="testimonial-product-tag">Kit Família</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Blog ───── -->
+<section id="blog" class="section">
+  <div class="container">
+    <div class="section-header flex-between reveal">
+      <div>
+        <span class="section-tag">Blog & Educação</span>
+        <h2 class="heading-1">Saúde do Seu Pet em Dia</h2>
+      </div>
+      <a href="#" class="btn btn-outline" style="flex-shrink:0">Ver Todos os Artigos →</a>
+    </div>
+    <div class="blog-grid">
+      <article class="blog-card reveal">
+        <div class="blog-image">
+          <span>🦷</span>
+        </div>
+        <div class="blog-body">
+          <div class="blog-category">Higiene Bucal</div>
+          <h3 class="blog-title">Como Identificar Tártaro no Seu Pet e o Que Fazer</h3>
+          <p class="blog-excerpt">Sinais visíveis, mau hálito e comportamento incomum podem indicar acúmulo de tártaro. Aprenda a identificar e agir antes que vire um problema grave.</p>
+          <div class="blog-meta">
+            <span class="blog-date">12 Jun 2026</span>
+            <span class="blog-read-more">
+              Ler mais
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </article>
+      <article class="blog-card reveal reveal-delay-1">
+        <div class="blog-image">
+          <span>🏡</span>
+        </div>
+        <div class="blog-body">
+          <div class="blog-category">Higiene do Lar</div>
+          <h3 class="blog-title">Pellet ou Areia para Gatos? Qual a Diferença e Como Escolher</h3>
+          <p class="blog-excerpt">Entenda as diferenças entre pellets de madeira, sílica e areia comum. Veja qual opção oferece mais conforto para o seu gato e praticidade para você.</p>
+          <div class="blog-meta">
+            <span class="blog-date">5 Jun 2026</span>
+            <span class="blog-read-more">
+              Ler mais
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </article>
+      <article class="blog-card reveal reveal-delay-2">
+        <div class="blog-image">
+          <span>❤️</span>
+        </div>
+        <div class="blog-body">
+          <div class="blog-category">Bem-Estar</div>
+          <h3 class="blog-title">Rotina de Saúde para Pets: O Que Todo Tutor Precisa Saber</h3>
+          <p class="blog-excerpt">Da higiene bucal à vacinação, passando pela alimentação. Montamos um guia completo da rotina de saúde ideal para cães e gatos de todas as idades.</p>
+          <div class="blog-meta">
+            <span class="blog-date">28 Mai 2026</span>
+            <span class="blog-read-more">
+              Ler mais
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Newsletter ───── -->
+<section id="newsletter" class="section">
+  <div class="newsletter-deco newsletter-deco-1"></div>
+  <div class="newsletter-deco newsletter-deco-2"></div>
+  <div class="container">
+    <div class="newsletter-inner">
+      <div class="newsletter-content reveal">
+        <span class="badge badge-gold" style="margin-bottom:1rem">🎁 Ganhe 10% OFF</span>
+        <h2 class="heading-1">Receba Novidades e Dicas para o Seu Pet</h2>
+        <p>Cadastre-se e ganhe <strong style="color:var(--clr-gold-lt)">10% de desconto</strong> na primeira compra, além de conteúdo exclusivo sobre saúde e bem-estar animal.</p>
+      </div>
+      <div class="newsletter-form reveal reveal-delay-1">
+        <form id="newsletter-form" onsubmit="handleNewsletterSubmit(event)">
+          <div class="newsletter-form-row">
+            <input
+              type="email"
+              class="newsletter-input"
+              placeholder="seu@email.com"
+              required
+              id="newsletter-email"
+              aria-label="Seu e-mail"
+            />
+            <button type="submit" class="btn btn-gold">
+              Quero o Desconto
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+          <p class="newsletter-privacy">🔒 Sem spam. Cancele quando quiser. Seus dados estão seguros.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Footer ───── -->
+<footer id="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="/" class="logo">
+          <span class="logo-name">AION PHARMA</span>
+          <span class="logo-tagline">Ciência para Pets</span>
+        </a>
+        <p>Desenvolvemos produtos veterinários com rigor científico e carinho pelos animais. Porque o seu pet merece o melhor cuidado.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" aria-label="Instagram">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+          </a>
+          <a href="#" class="social-link" aria-label="Facebook">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          </a>
+          <a href="#" class="social-link" aria-label="WhatsApp">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Produtos</h4>
+        <ul class="footer-links">
+          <li><a href="produto-tartoff.html">Tartoff Gel Dental</a></li>
+          <li><a href="produtos.html">Pellet Higiênico</a></li>
+          <li><a href="produtos.html">Kit Família</a></li>
+          <li><a href="produtos.html">Kit Mensal</a></li>
+          <li><a href="produtos.html">Ver Todos</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Empresa</h4>
+        <ul class="footer-links">
+          <li><a href="#">Sobre a Aion</a></li>
+          <li><a href="#blog">Blog</a></li>
+          <li><a href="#">Parceiros</a></li>
+          <li><a href="#">Trabalhe Conosco</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Ajuda</h4>
+        <ul class="footer-links">
+          <li><a href="#">Central de Atendimento</a></li>
+          <li><a href="#">Política de Entrega</a></li>
+          <li><a href="#">Trocas e Devoluções</a></li>
+          <li><a href="#">Política de Privacidade</a></li>
+          <li><a href="#">Termos de Uso</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Aion Pharma. Todos os direitos reservados.</p>
+      <div class="footer-seals">
+        <span>🔒 Site Seguro</span>
+        <span>🛡️ Compra Protegida</span>
+        <span>✅ MAPA Registrado</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ───── Cart Drawer ───── -->
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cart-drawer" role="dialog" aria-label="Carrinho de compras" aria-modal="true">
+  <div class="cart-drawer-header">
+    <h3>🛒 Seu Carrinho</h3>
+    <button class="cart-close" onclick="closeCart()" aria-label="Fechar carrinho">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="cart-items" id="cart-items-container">
+    <div class="cart-empty" id="cart-empty">
+      <div class="empty-icon">🐾</div>
+      <p>Seu carrinho está vazio</p>
+      <a href="produtos.html" class="btn btn-primary btn-sm" onclick="closeCart()">Ver Produtos</a>
+    </div>
+  </div>
+  <div class="cart-footer" id="cart-footer" style="display:none">
+    <div class="cart-total">
+      <span class="cart-total-label">Total</span>
+      <span class="cart-total-value" id="cart-total-display">R$ 0,00</span>
+    </div>
+    <button class="btn btn-gold cart-checkout-btn" onclick="handleCheckout()">
+      Finalizar Compra via WhatsApp
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- ───── Toast Container ───── -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="script.js"></script>
 </body>
 </html>
