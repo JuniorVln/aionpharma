@@ -3,176 +3,206 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Produtos — Aion Pharma</title>
-  <meta name="description" content="Conheça todos os produtos Aion Pharma para saúde e bem-estar do seu pet. Tartoff, Pellet Higiênico e muito mais." />
+  <title>Produto — Aion Pharma</title>
+  <meta name="description" content="Produto Aion Pharma para saúde e bem-estar do seu pet." />
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🐾</text></svg>" />
   <style>
-    .page-hero {
-      background: linear-gradient(135deg, var(--clr-dark) 0%, var(--clr-primary) 100%);
-      padding: var(--space-16) 0 var(--space-12);
-      position: relative;
-      overflow: hidden;
+    .breadcrumb {
+      padding: var(--space-5) 0;
+      border-bottom: 1px solid var(--clr-border);
+      background: var(--clr-cream);
     }
-    .page-hero::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 80% 50%, rgba(201,168,76,.08) 0%, transparent 60%);
+    .breadcrumb-list {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 0.875rem;
+      flex-wrap: wrap;
     }
-    .page-hero .container { position: relative; z-index: 1; }
-    .page-hero-tag { color: var(--clr-gold-lt); font-family: var(--font-heading); font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: var(--space-3); }
-    .page-hero h1 { color: var(--clr-white); margin-bottom: var(--space-4); }
-    .page-hero p { color: rgba(255,255,255,.7); font-size: 1.0625rem; max-width: 500px; }
+    .breadcrumb-list a { color: var(--clr-text-muted); transition: color var(--dur-fast) var(--ease); }
+    .breadcrumb-list a:hover { color: var(--clr-primary); }
+    .breadcrumb-sep { color: var(--clr-text-muted); }
+    .breadcrumb-current { color: var(--clr-text); font-weight: 500; }
 
-    .catalog-layout {
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      gap: var(--space-10);
+    .product-page {
       padding: var(--space-12) 0 var(--space-20);
     }
-
-    /* Filters Sidebar */
-    .filters-sidebar {
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    .product-gallery {
       position: sticky;
       top: calc(var(--header-h) + 1.5rem);
-      align-self: start;
     }
-
-    .filter-group {
-      background: var(--clr-white);
+    .product-main-image {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, var(--clr-cream) 0%, var(--clr-primary-pale) 100%);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
       border: 1px solid var(--clr-border);
-      border-radius: var(--radius-lg);
-      padding: var(--space-5);
-      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-
-    .filter-group h3 {
+    .product-main-image img {
+      width: 85%;
+      height: 85%;
+      object-fit: contain;
+      filter: drop-shadow(0 16px 32px rgba(45,74,53,.15));
+    }
+    .product-brand {
+      font-family: var(--font-heading);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--clr-gold);
+      margin-bottom: var(--space-2);
+    }
+    .product-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 800;
+      margin-bottom: var(--space-4);
+      line-height: 1.2;
+    }
+    .product-rating-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+      flex-wrap: wrap;
+    }
+    .product-description {
+      font-size: 1rem;
+      color: var(--clr-text-muted);
+      line-height: 1.7;
+    }
+    .product-info-top {
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-6);
+      border-bottom: 1px solid var(--clr-border);
+    }
+    .price-block { margin-bottom: var(--space-6); }
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-3);
+      margin-bottom: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .price-main {
+      font-family: var(--font-heading);
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--clr-primary);
+      line-height: 1;
+    }
+    .price-compare {
+      font-size: 1.125rem;
+      color: var(--clr-text-muted);
+      text-decoration: line-through;
+    }
+    .price-discount {
+      font-family: var(--font-heading);
+      font-size: 0.875rem;
+      font-weight: 700;
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+    .price-note {
+      font-size: 0.875rem;
+      color: var(--clr-text-muted);
+    }
+    .option-group { margin-bottom: var(--space-5); }
+    .option-label {
       font-family: var(--font-heading);
       font-size: 0.9375rem;
       font-weight: 700;
-      margin-bottom: var(--space-4);
-      color: var(--clr-dark);
+      margin-bottom: var(--space-3);
     }
-
-    .filter-options {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-3);
-    }
-
-    .filter-option {
+    .qty-selector {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
-      cursor: pointer;
-      padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius-sm);
-      transition: background var(--dur-fast) var(--ease);
-    }
-    .filter-option:hover { background: var(--clr-primary-pale); }
-    .filter-option input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--clr-primary);
-    }
-    .filter-option span {
-      font-size: 0.9375rem;
-      color: var(--clr-text);
-    }
-    .filter-option .filter-count {
-      margin-left: auto;
-      font-size: 0.75rem;
-      color: var(--clr-text-muted);
-      background: var(--clr-cream);
-      padding: 1px 6px;
-      border-radius: var(--radius-full);
-    }
-
-    /* Sort + Count Bar */
-    .catalog-topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: var(--space-6);
-      padding-bottom: var(--space-5);
-      border-bottom: 1px solid var(--clr-border);
-    }
-
-    .results-count { font-size: 0.9375rem; color: var(--clr-text-muted); }
-    .results-count strong { color: var(--clr-dark); font-family: var(--font-heading); }
-
-    .sort-select {
-      padding: 0.5rem 1rem;
-      border: 1px solid var(--clr-border);
+      border: 2px solid var(--clr-border);
       border-radius: var(--radius-md);
-      font-family: var(--font-heading);
-      font-size: 0.875rem;
-      color: var(--clr-text);
-      background: var(--clr-white);
-      outline: none;
-      cursor: pointer;
-      transition: border-color var(--dur-fast) var(--ease);
+      overflow: hidden;
+      width: fit-content;
     }
-    .sort-select:focus { border-color: var(--clr-primary); }
-
-    /* Active filters */
-    .active-filters {
+    .qty-btn-lg {
+      width: 44px;
+      height: 44px;
       display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-2);
-      margin-bottom: var(--space-5);
-    }
-    .active-filter-tag {
-      display: inline-flex;
       align-items: center;
-      gap: var(--space-2);
-      padding: 0.3rem 0.875rem;
-      background: var(--clr-primary-pale);
-      border: 1px solid var(--clr-primary);
-      border-radius: var(--radius-full);
+      justify-content: center;
+      background: var(--clr-cream);
+      font-size: 1.25rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+    .qty-btn-lg:hover { background: var(--clr-primary-pale); }
+    .qty-display {
+      width: 52px;
+      text-align: center;
       font-family: var(--font-heading);
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: var(--clr-primary);
+      font-size: 1rem;
+      font-weight: 700;
     }
-    .active-filter-tag button { display: flex; align-items: center; color: var(--clr-primary); }
+    .buy-actions {
+      display: flex;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+    .buy-actions .btn { flex: 1; min-width: 140px; justify-content: center; }
+    .shipping-info {
+      background: var(--clr-primary-pale);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4) var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-size: 0.9375rem;
+    }
+    .shipping-info svg { color: var(--clr-primary); flex-shrink: 0; }
+    .product-tabs {
+      margin-top: var(--space-16);
+      border-top: 2px solid var(--clr-border);
+      padding-top: var(--space-10);
+    }
+    .product-long-desc {
+      color: var(--clr-text-muted);
+      line-height: 1.8;
+      font-size: 1rem;
+    }
+    .product-page-loading,
+    .product-page-error {
+      text-align: center;
+      padding: var(--space-16) 0;
+      color: var(--clr-text-muted);
+    }
+    .product-page-error .btn { margin-top: var(--space-4); }
 
-    /* Catalog grid */
-    .catalog-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-5);
-    }
-
-    /* Alinha filtros + produtos com as bordas do header e do hero (anula o padding lateral do .container) */
-    @media (min-width: 1025px) {
-      .catalog-layout {
-        margin-left: calc(var(--space-6) * -1);
-        margin-right: calc(var(--space-6) * -1);
-      }
-    }
-
-    @media (max-width: 1024px) {
-      .catalog-layout { grid-template-columns: 1fr; }
-      .filters-sidebar { position: static; }
-      .catalog-grid { grid-template-columns: repeat(2, 1fr); }
-      .filter-group { display: none; }
-      .filter-group.show-mobile { display: block; }
-    }
-    @media (max-width: 480px) {
-      .catalog-grid { grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+    @media (max-width: 900px) {
+      .product-layout { grid-template-columns: 1fr; gap: var(--space-8); }
+      .product-gallery { position: static; }
     }
   </style>
 </head>
 <body>
 
-<!-- Announcement Bar -->
 <div id="announcement-bar">
   🐾 <strong>FRETE GRÁTIS</strong> em compras acima de R$ 99 &nbsp;|&nbsp; Use o cupom <strong>AION10</strong> e ganhe 10% OFF
 </div>
 
-<!-- Header -->
 <header id="header">
   <div class="container">
     <div class="header-inner">
@@ -208,98 +238,24 @@
   <a href="contato.html" onclick="closeMobileNav()">Contato</a>
 </nav>
 
-<!-- Page Hero -->
-<section class="page-hero">
+<div class="breadcrumb">
   <div class="container">
-    <div class="page-hero-tag">Catálogo Completo</div>
-    <h1 class="display-2">Nossos Produtos</h1>
-    <p>Soluções científicas de higiene e saúde para o seu pet. Desenvolvidas com carinho e rigor veterinário.</p>
-  </div>
-</section>
-
-<!-- Catalog -->
-<div class="container">
-  <div class="catalog-layout">
-
-    <!-- Sidebar Filters -->
-    <aside class="filters-sidebar">
-      <div class="filter-group show-mobile">
-        <h3>Animal</h3>
-        <div class="filter-options">
-          <label class="filter-option">
-            <input type="checkbox" onchange="applyFilter()" id="filter-cao" />
-            <span>🐕 Cães</span>
-            <span class="filter-count">2</span>
-          </label>
-          <label class="filter-option">
-            <input type="checkbox" onchange="applyFilter()" id="filter-gato" />
-            <span>🐈 Gatos</span>
-            <span class="filter-count">3</span>
-          </label>
-        </div>
-      </div>
-      <div class="filter-group show-mobile">
-        <h3>Categoria</h3>
-        <div class="filter-options">
-          <label class="filter-option">
-            <input type="checkbox" onchange="applyFilter()" id="filter-bucal" />
-            <span>🦷 Higiene Bucal</span>
-            <span class="filter-count">2</span>
-          </label>
-          <label class="filter-option">
-            <input type="checkbox" onchange="applyFilter()" id="filter-lar" />
-            <span>🏠 Higiene do Lar</span>
-            <span class="filter-count">2</span>
-          </label>
-          <label class="filter-option">
-            <input type="checkbox" onchange="applyFilter()" id="filter-saude" />
-            <span>❤️ Saúde</span>
-            <span class="filter-count">0</span>
-          </label>
-        </div>
-      </div>
-      <div class="filter-group show-mobile">
-        <h3>Preço</h3>
-        <div class="filter-options">
-          <label class="filter-option">
-            <input type="checkbox" onchange="applyFilter()" />
-            <span>Até R$ 50</span>
-            <span class="filter-count">2</span>
-          </label>
-          <label class="filter-option">
-            <input type="checkbox" onchange="applyFilter()" />
-            <span>R$ 50 a R$ 120</span>
-            <span class="filter-count">2</span>
-          </label>
-          <label class="filter-option">
-            <input type="checkbox" onchange="applyFilter()" />
-            <span>Acima de R$ 120</span>
-            <span class="filter-count">0</span>
-          </label>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Product Listing -->
-    <main>
-      <div class="catalog-topbar">
-        <span class="results-count"><strong id="product-count">4</strong> produtos encontrados</span>
-        <select class="sort-select" aria-label="Ordenar produtos">
-          <option value="relevance">Mais Relevantes</option>
-          <option value="price-asc">Menor Preço</option>
-          <option value="price-desc">Maior Preço</option>
-          <option value="rating">Melhor Avaliados</option>
-        </select>
-      </div>
-
-      <div class="catalog-grid" id="catalog-grid">
-        <!-- Preenchido dinamicamente via /api/produtos (script.js) -->
-      </div>
-    </main>
+    <ol class="breadcrumb-list" aria-label="Localização na loja">
+      <li><a href="index.html">Início</a></li>
+      <li class="breadcrumb-sep" aria-hidden="true">/</li>
+      <li><a href="produtos.html">Produtos</a></li>
+      <li class="breadcrumb-sep" aria-hidden="true">/</li>
+      <li class="breadcrumb-current" id="product-breadcrumb-name" aria-current="page">Produto</li>
+    </ol>
   </div>
 </div>
 
-<!-- Footer -->
+<div class="product-page">
+  <div class="container" id="product-page-root">
+    <div class="product-page-loading">Carregando produto…</div>
+  </div>
+</div>
+
 <footer id="footer">
   <div class="container">
     <div class="footer-top">
@@ -361,7 +317,6 @@
   </div>
 </footer>
 
-<!-- Cart Drawer -->
 <div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
 <div class="cart-drawer" id="cart-drawer" role="dialog" aria-label="Carrinho" aria-modal="true">
   <div class="cart-drawer-header">
@@ -393,13 +348,10 @@
       <span class="cart-total-label">Total</span>
       <span class="cart-total-value" id="cart-total-display">R$ 0,00</span>
     </div>
-    <button class="btn btn-gold cart-checkout-btn" onclick="openCheckout()">
-      Finalizar Compra →
-    </button>
+    <button class="btn btn-gold cart-checkout-btn" onclick="openCheckout()">Finalizar Compra →</button>
   </div>
 </div>
 
-<!-- ───── Checkout (dados do cliente) ───── -->
 <div class="checkout-overlay" id="checkout-overlay" onclick="closeCheckout()"></div>
 <div class="checkout-panel" id="checkout-panel" role="dialog" aria-label="Finalizar pedido" aria-modal="true">
   <div class="checkout-header">
@@ -425,7 +377,6 @@
       </div>
       <div class="field"><label id="cpf-label">CPF*</label><input name="cpfCnpj" required /></div>
     </div>
-
     <div class="checkout-section">Endereço de entrega</div>
     <div class="field-row">
       <div class="field"><label>CEP*</label><input name="cep" id="checkout-cep" required maxlength="9" oninput="onCheckoutCep(this)" /></div>
@@ -440,7 +391,6 @@
       <div class="field"><label>Cidade*</label><input name="cidade" id="checkout-cidade" required /></div>
       <div class="field" style="max-width:90px"><label>UF*</label><input name="uf" id="checkout-uf" required maxlength="2" /></div>
     </div>
-
     <div class="checkout-resumo" id="checkout-resumo"></div>
     <button type="submit" class="btn btn-gold checkout-submit" id="checkout-submit">Ir para o pagamento →</button>
     <p class="checkout-note">Pagamento seguro via Mercado Pago (Pix, cartão ou boleto).</p>
