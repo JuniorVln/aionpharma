@@ -92,10 +92,18 @@ export async function emitirNotaFiscal(idNota) {
 
 /* ── Helper: montar pedido a partir do carrinho ─────────────── */
 
-export function montarPedido({ cliente, itens, observacoes = '', situacao = 'aberto' }) {
+export function montarPedido({ cliente, itens, observacoes = '', situacao = 'aberto', frete = null }) {
+  // frete = { id, name, company, price } escolhido pelo cliente (Melhor Envio).
+  // O valor vai no pedido para conciliar com a etiqueta gerada no Olist Envios.
+  const valorFrete = frete && Number(frete.price) > 0 ? Number(frete.price) : 0;
+  const formaEnvio = frete ? [frete.company, frete.name].filter(Boolean).join(' ') : '';
+  const obsFrete = formaEnvio ? `Frete escolhido: ${formaEnvio} (R$ ${valorFrete.toFixed(2)}).` : '';
   return {
     data_pedido: '',
     situacao,
+    valor_frete: valorFrete,
+    frete_por_conta: 'R', // R = por conta do Remetente (loja despacha via Olist Envios)
+    forma_envio: formaEnvio,
     cliente: {
       nome: cliente.nome,
       tipoPessoa: cliente.tipoPessoa || 'F',
@@ -119,7 +127,7 @@ export function montarPedido({ cliente, itens, observacoes = '', situacao = 'abe
         valor_unitario: item.price,
       },
     })),
-    obs: observacoes,
+    obs: [observacoes, obsFrete].filter(Boolean).join(' '),
   };
 }
 

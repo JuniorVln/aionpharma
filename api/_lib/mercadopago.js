@@ -23,10 +23,11 @@ function getAccessToken() {
  * @param {object} opts
  * @param {Array<{title,quantity,unit_price,picture_url?}>} opts.items
  * @param {string} opts.externalReference  id do pedido no Tiny (para conciliar)
+ * @param {number} [opts.shipmentCost]      valor do frete (somado ao total)
  * @param {object} [opts.payer]
  * @returns {Promise<{ id, init_point, sandbox_init_point }>}
  */
-export async function criarPreferencia({ items, externalReference, payer }) {
+export async function criarPreferencia({ items, externalReference, shipmentCost = 0, payer }) {
   const siteUrl = (process.env.SITE_URL || '').replace(/\/$/, '');
 
   const preference = {
@@ -37,6 +38,9 @@ export async function criarPreferencia({ items, externalReference, payer }) {
       currency_id: 'BRL',
       picture_url: it.picture_url || undefined,
     })),
+    shipments: Number(shipmentCost) > 0
+      ? { cost: Number(shipmentCost), mode: 'not_specified' }
+      : undefined,
     external_reference: externalReference,
     payer: payer || undefined,
     back_urls: {

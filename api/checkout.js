@@ -29,22 +29,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { cliente, itens } = await readJson(req);
+    const { cliente, itens, frete } = await readJson(req);
 
     if (!cliente?.nome || !Array.isArray(itens) || itens.length === 0) {
       return res.status(400).json({ error: 'Pedido inválido: informe cliente e itens.' });
     }
 
-    // 1) Cria o pedido no Tiny
+    // frete = { id, name, company, price } escolhido no checkout (Melhor Envio).
+    const valorFrete = frete && Number(frete.price) > 0 ? Number(frete.price) : 0;
+
+    // 1) Cria o pedido no Tiny (com o frete escolhido)
     const pedido = montarPedido({
       cliente,
       itens,
+      frete,
       observacoes: 'Pedido originado pela loja online (aguardando pagamento).',
       situacao: 'aberto',
     });
     const { id: pedidoId, numero } = await incluirPedido(pedido);
 
-    // 2) Cria a preferência de pagamento no Mercado Pago
+    // 2) Cria a preferência de pagamento no Mercado Pago (frete somado ao total)
     const preferencia = await criarPreferencia({
       externalReference: String(pedidoId),
       items: itens.map((it) => ({
@@ -53,6 +57,7 @@ export default async function handler(req, res) {
         unit_price: it.price,
         picture_url: it.image || undefined,
       })),
+      shipmentCost: valorFrete,
       payer: cliente.email ? { name: cliente.nome, email: cliente.email } : undefined,
     });
 
@@ -65,6 +70,7 @@ export default async function handler(req, res) {
       numero,
       preferenceId: preferencia.id,
       paymentUrl,
+      publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || null,
     });
   } catch (err) {
     console.error('[/api/checkout]', err.message);

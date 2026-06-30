@@ -5,6 +5,7 @@
 
 // ── State ─────────────────────────────────────────
 let cart = [];
+let selectedFrete = null; // { id, name, company, price, prazo }
 
 // ── Init ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRevealAnimations();
   initMobileNav();
   initCatalog();
+  initProductPage();
 });
 
 // ── Header Scroll ──────────────────────────────────
@@ -87,6 +89,7 @@ function addToCart(id, name, price, image) {
   } else {
     cart.push({ id, name, price, image, qty: 1 });
   }
+  invalidarFrete();
   saveCart();
   renderCartUI();
   showToast(`✅ <strong>${name}</strong> adicionado ao carrinho`);
@@ -95,6 +98,7 @@ function addToCart(id, name, price, image) {
 
 function removeFromCart(id) {
   cart = cart.filter(item => item.id !== id);
+  invalidarFrete();
   saveCart();
   renderCartUI();
 }
@@ -103,8 +107,16 @@ function updateQty(id, delta) {
   const item = cart.find(i => i.id === id);
   if (!item) return;
   item.qty = Math.max(1, item.qty + delta);
+  invalidarFrete();
   saveCart();
   renderCartUI();
+}
+
+// O frete depende do conteúdo do carrinho; ao mudar, zera a escolha.
+function invalidarFrete() {
+  selectedFrete = null;
+  const box = document.getElementById('cart-frete-options');
+  if (box) { box.innerHTML = ''; box._opcoes = null; }
 }
 
 function getCartTotal() {
@@ -175,8 +187,96 @@ function renderCartUI() {
     container.appendChild(itemEl);
   });
 
-  // Total
-  if (totalEl) totalEl.textContent = formatPrice(getCartTotal());
+  // Subtotal + frete + total
+  const subtotal = getCartTotal();
+  const freteVal = selectedFrete ? Number(selectedFrete.price) : 0;
+  const subEl = document.getElementById('cart-subtotal-display');
+  if (subEl) subEl.textContent = formatPrice(subtotal);
+  const freteLine = document.getElementById('cart-frete-line');
+  const freteDisp = document.getElementById('cart-frete-display');
+  if (freteLine && freteDisp) {
+    if (selectedFrete) {
+      freteLine.style.display = 'flex';
+      freteDisp.textContent = freteVal === 0 ? 'Grátis' : formatPrice(freteVal);
+    } else {
+      freteLine.style.display = 'none';
+    }
+  }
+  if (totalEl) totalEl.textContent = formatPrice(subtotal + freteVal);
+}
+
+/* ── Frete (cotação via /api/frete) ───────────────────────────── */
+
+// Máscara simples de CEP (00000-000) e invalida frete escolhido ao editar.
+function onCepInput(el) {
+  let v = el.value.replace(/\D/g, '').slice(0, 8);
+  if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+  el.value = v;
+  selectedFrete = null;
+}
+
+async function calcularFrete() {
+  const cepEl = document.getElementById('cart-cep');
+  const box = document.getElementById('cart-frete-options');
+  if (!cepEl || !box) return;
+  const cep = cepEl.value.replace(/\D/g, '');
+  if (cep.length !== 8) {
+    box.innerHTML = `<p class="frete-msg frete-erro">Digite um CEP válido (8 dígitos).</p>`;
+    return;
+  }
+  if (cart.length === 0) return;
+
+  box.innerHTML = `<p class="frete-msg">Calculando frete…</p>`;
+  try {
+    const r = await fetch('/api/frete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cep, itens: cart }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || data.error || 'Falha na cotação');
+
+    if (data.freteGratis) {
+      selectedFrete = { id: 'gratis', name: 'Frete grátis', company: '', price: 0, prazo: null };
+      box.innerHTML = `<p class="frete-msg frete-ok">🎉 Você ganhou frete grátis!</p>`;
+      renderCartUI();
+      return;
+    }
+    if (!data.opcoes || !data.opcoes.length) {
+      box.innerHTML = `<p class="frete-msg frete-erro">${data.aviso || 'Sem opções de envio para este CEP.'}</p>`;
+      return;
+    }
+    renderFreteOptions(data.opcoes);
+  } catch (err) {
+    box.innerHTML = `<p class="frete-msg frete-erro">Não foi possível calcular: ${err.message}</p>`;
+  }
+}
+
+function renderFreteOptions(opcoes) {
+  const box = document.getElementById('cart-frete-options');
+  if (!box) return;
+  box.innerHTML = opcoes.map((o, i) => {
+    const prazo = o.prazo ? ` · ${o.prazo} dia(s) útil(eis)` : '';
+    const label = [o.company, o.name].filter(Boolean).join(' ');
+    return `<label class="frete-opt">
+      <input type="radio" name="frete" value="${i}" onchange="selecionarFrete(${i})" />
+      <span class="frete-opt-name">${label}${prazo}</span>
+      <span class="frete-opt-price">${formatPrice(o.price)}</span>
+    </label>`;
+  }).join('');
+  // guarda as opções no elemento para o select
+  box._opcoes = opcoes;
+  // pré-seleciona a 1ª (mais barata)
+  const first = box.querySelector('input[name="frete"]');
+  if (first) { first.checked = true; selecionarFrete(0); }
+}
+
+function selecionarFrete(i) {
+  const box = document.getElementById('cart-frete-options');
+  const o = box?._opcoes?.[i];
+  if (!o) return;
+  selectedFrete = o;
+  renderCartUI();
 }
 
 function formatPrice(value) {
@@ -203,19 +303,148 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeCart();
 });
 
-// ── Checkout via WhatsApp ──────────────────────────
-function handleCheckout() {
-  if (cart.length === 0) return;
+/* ── Checkout (dados do cliente → /api/checkout → Mercado Pago) ── */
 
-  const WHATSAPP_NUMBER = '5511999999999'; // ← Substitua pelo número real
-  const items = cart.map(item =>
-    `• ${item.name} x${item.qty} = ${formatPrice(item.price * item.qty)}`
-  ).join('\n');
-  const total = formatPrice(getCartTotal());
-  const message = encodeURIComponent(
-    `Olá! Gostaria de fazer um pedido na Aion Pharma:\n\n${items}\n\n*Total: ${total}*\n\nPor favor, me informe sobre as formas de pagamento e entrega. Obrigado! 🐾`
-  );
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
+function openCheckout() {
+  if (cart.length === 0) return;
+  if (!selectedFrete) {
+    showToast('📦 Calcule o frete e escolha uma opção de envio antes de finalizar.', 3500);
+    return;
+  }
+  voltarCheckoutForm(); // garante a etapa do formulário ao (re)abrir
+  // copia o CEP já informado no carrinho
+  const cepCart = document.getElementById('cart-cep');
+  const cepForm = document.getElementById('checkout-cep');
+  if (cepForm && cepCart && cepCart.value) { cepForm.value = cepCart.value; onCheckoutCep(cepForm); }
+  renderCheckoutResumo();
+  document.getElementById('checkout-overlay')?.classList.add('open');
+  document.getElementById('checkout-panel')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCheckout() {
+  document.getElementById('checkout-overlay')?.classList.remove('open');
+  document.getElementById('checkout-panel')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function onTipoPessoa(sel) {
+  const lbl = document.getElementById('cpf-label');
+  if (lbl) lbl.textContent = sel.value === 'J' ? 'CNPJ*' : 'CPF*';
+}
+
+// Máscara de CEP + busca de endereço no ViaCEP
+function onCheckoutCep(el) {
+  let v = el.value.replace(/\D/g, '').slice(0, 8);
+  if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+  el.value = v;
+  if (v.replace(/\D/g, '').length === 8) buscarCep(v.replace(/\D/g, ''));
+}
+
+async function buscarCep(cep) {
+  try {
+    const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const d = await r.json();
+    if (d.erro) return;
+    const set = (id, val) => { const e = document.getElementById(id); if (e && val && !e.value) e.value = val; };
+    set('checkout-endereco', d.logradouro);
+    set('checkout-bairro', d.bairro);
+    set('checkout-cidade', d.localidade);
+    set('checkout-uf', d.uf);
+  } catch { /* silencioso — o cliente pode preencher à mão */ }
+}
+
+function renderCheckoutResumo() {
+  const box = document.getElementById('checkout-resumo');
+  if (!box) return;
+  const subtotal = getCartTotal();
+  const frete = selectedFrete ? Number(selectedFrete.price) : 0;
+  const freteLabel = selectedFrete ? [selectedFrete.company, selectedFrete.name].filter(Boolean).join(' ') : '';
+  box.innerHTML = `
+    <div class="cart-line"><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
+    <div class="cart-line"><span>Frete (${freteLabel})</span><span>${frete === 0 ? 'Grátis' : formatPrice(frete)}</span></div>
+    <div class="cart-line checkout-resumo-total"><span>Total</span><span>${formatPrice(subtotal + frete)}</span></div>`;
+}
+
+async function enviarCheckout(event) {
+  event.preventDefault();
+  const btn = document.getElementById('checkout-submit');
+  const form = event.target;
+  const f = Object.fromEntries(new FormData(form).entries());
+
+  const cliente = {
+    nome: f.nome, email: f.email, telefone: f.telefone,
+    tipoPessoa: f.tipoPessoa, cpfCnpj: f.cpfCnpj,
+    cep: f.cep, endereco: f.endereco, numero: f.numero,
+    complemento: f.complemento || '', bairro: f.bairro,
+    cidade: f.cidade, uf: (f.uf || '').toUpperCase(),
+  };
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Processando…'; }
+  try {
+    const r = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cliente, itens: cart, frete: selectedFrete }),
+    });
+    const data = await r.json();
+    if (!r.ok || !data.preferenceId) throw new Error(data.detail || data.error || 'Falha no checkout');
+
+    // sem public key configurada → cai para o checkout externo (init_point)
+    if (!data.publicKey) {
+      if (data.paymentUrl) { window.location.href = data.paymentUrl; return; }
+      throw new Error('Pagamento indisponível no momento. Tente novamente em instantes.');
+    }
+    // pagamento embutido no site (modal do Mercado Pago)
+    await renderWalletBrick(data.preferenceId, data.publicKey, data.paymentUrl);
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 4000);
+    if (btn) { btn.disabled = false; btn.textContent = 'Ir para o pagamento →'; }
+  }
+}
+
+/* ── Wallet Brick: abre o Checkout Pro num modal sobre o site ── */
+let mpInstance = null;
+let walletBrickController = null;
+
+async function renderWalletBrick(preferenceId, publicKey, fallbackUrl) {
+  // SDK não carregou → usa o checkout externo se houver
+  if (typeof MercadoPago === 'undefined') {
+    if (fallbackUrl) { window.location.href = fallbackUrl; return; }
+    throw new Error('Não foi possível carregar o pagamento. Recarregue a página.');
+  }
+
+  const form = document.getElementById('checkout-form');
+  const pag = document.getElementById('checkout-pagamento');
+  const container = document.getElementById('wallet-container');
+
+  // troca a etapa: esconde o formulário, mostra o pagamento
+  if (form) form.style.display = 'none';
+  if (pag) pag.style.display = 'block';
+  if (container) container.innerHTML = '';
+
+  if (!mpInstance) mpInstance = new MercadoPago(publicKey, { locale: 'pt-BR' });
+
+  // remove um brick anterior (caso o cliente tenha voltado e refeito o pedido)
+  if (walletBrickController) {
+    try { await walletBrickController.unmount(); } catch { /* ignore */ }
+    walletBrickController = null;
+  }
+
+  walletBrickController = await mpInstance.bricks().create('wallet', 'wallet-container', {
+    initialization: { preferenceId, redirectMode: 'modal' },
+    customization: { texts: { valueProp: 'practicality' } },
+  });
+}
+
+// Volta da etapa de pagamento para o formulário de dados.
+function voltarCheckoutForm() {
+  const form = document.getElementById('checkout-form');
+  const pag = document.getElementById('checkout-pagamento');
+  if (pag) pag.style.display = 'none';
+  if (form) form.style.display = '';
+  const btn = document.getElementById('checkout-submit');
+  if (btn) { btn.disabled = false; btn.textContent = 'Ir para o pagamento →'; }
 }
 
 // ── Toast Notifications ────────────────────────────
@@ -296,6 +525,17 @@ function initCatalog() {
     });
 }
 
+// Imagem local com fundo transparente para a linha TartOff (sobrepõe a do Tiny)
+function localProductImage(name) {
+  const n = (name || '').toLowerCase();
+  const isGel = n.includes('gel dental') || n.includes('tartoff');
+  if (!isGel) return null;
+  const size = n.includes('100') ? '100ml' : n.includes('50') ? '50ml' : null;
+  const flavor = n.includes('banana') ? 'banana' : n.includes('menta') ? 'menta' : null;
+  if (!flavor || !size) return null;
+  return `/assets/produtos/gel-${flavor}-${size}.png`;
+}
+
 // Deriva tags simples (animal/categoria) a partir do nome — best effort
 function withTags(p) {
   const n = (p.name || '').toLowerCase();
@@ -308,7 +548,8 @@ function withTags(p) {
   } else if (n.includes('osso') || n.includes('everbone') || n.includes('nylon')) {
     animal = 'cao'; category = 'saude';
   }
-  return { ...p, animal, category };
+  const image = localProductImage(p.name) || p.image;
+  return { ...p, animal, category, image };
 }
 
 function catalogSkeleton(n) {
@@ -332,6 +573,10 @@ function renderProducts(grid, products) {
   updateProductCount(products.length);
 }
 
+function productUrl(p) {
+  return `produto.html?id=${encodeURIComponent(p.id)}`;
+}
+
 function productCardHTML(p) {
   const animalLabel = p.animal === 'gato' ? '🐈 Gatos'
     : p.animal === 'cao' ? '🐕 Cães'
@@ -339,10 +584,10 @@ function productCardHTML(p) {
   const priceOld = p.priceOld ? `<span class="price-old">${formatPrice(p.priceOld)}</span>` : '';
   const desc = (p.description || '').split('\n')[0].slice(0, 90) || 'Produto Aion Pharma para o cuidado do seu pet.';
   const outOfStock = p.inStock === false;
-  // dados escapados para o onclick
   const safeName = (p.name || '').replace(/'/g, "\\'");
+  const safeImage = (p.image || '').replace(/'/g, "\\'");
   return `
-  <div class="product-card reveal" data-animal="${p.animal}" data-category="${p.category}" data-price="${p.price}" data-name="${(p.name || '').toLowerCase()}">
+  <a href="${productUrl(p)}" class="product-card reveal" data-animal="${p.animal}" data-category="${p.category}" data-price="${p.price}" data-name="${(p.name || '').toLowerCase()}">
     <div class="product-image">
       <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.src='/assets/images/placeholder-produto.svg'" />
       ${outOfStock ? '<div class="product-badges"><span class="badge badge-muted">Indisponível</span></div>' : ''}
@@ -353,13 +598,13 @@ function productCardHTML(p) {
       <p class="product-desc">${desc}</p>
       <div class="product-footer">
         <div class="product-price">${priceOld}<span class="price-current">${formatPrice(p.price)}</span></div>
-        <button class="add-to-cart-btn" aria-label="Adicionar ao carrinho" ${outOfStock ? 'disabled' : ''}
-          onclick="addToCart('${p.id}','${safeName}',${p.price},'${p.image}')">
+        <button type="button" class="add-to-cart-btn" aria-label="Adicionar ao carrinho" ${outOfStock ? 'disabled' : ''}
+          onclick="event.preventDefault(); event.stopPropagation(); addToCart('${p.id}','${safeName}',${p.price},'${safeImage}')">
           <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
     </div>
-  </div>`;
+  </a>`;
 }
 
 function updateProductCount(n) {
@@ -403,3 +648,144 @@ function checkedValues(ids, map) {
 // substitui a antiga applyFilter inline da página
 function applyFilter() { applyCatalog(); }
 window.applyFilter = applyFilter;
+
+/* ================================================================
+   Página de produto — produto.html?id=
+   ================================================================ */
+
+let PRODUCT_PAGE = null;
+let productQty = 1;
+
+function initProductPage() {
+  const root = document.getElementById('product-page-root');
+  if (!root) return;
+
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) {
+    root.innerHTML = productPageNotFound();
+    return;
+  }
+
+  root.innerHTML = '<div class="product-page-loading">Carregando produto…</div>';
+
+  fetch('/api/produtos')
+    .then((r) => r.json())
+    .then((data) => {
+      const p = (data.produtos || []).map(withTags).find((item) => item.id === id);
+      if (!p) {
+        root.innerHTML = productPageNotFound();
+        return;
+      }
+      PRODUCT_PAGE = p;
+      productQty = 1;
+      document.title = `${p.name} — Aion Pharma`;
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) meta.content = (p.description || p.name).slice(0, 160);
+      root.innerHTML = renderProductPageHTML(p);
+      document.getElementById('product-breadcrumb-name').textContent = p.name;
+      initRevealAnimations();
+    })
+    .catch(() => {
+      root.innerHTML = `<div class="product-page-error">
+        <p>Não foi possível carregar este produto.</p>
+        <a href="produtos.html" class="btn btn-primary btn-sm">Voltar ao catálogo</a>
+      </div>`;
+    });
+}
+
+function productPageNotFound() {
+  return `<div class="product-page-error">
+    <p>Produto não encontrado.</p>
+    <a href="produtos.html" class="btn btn-primary btn-sm">Ver todos os produtos</a>
+  </div>`;
+}
+
+function renderProductPageHTML(p) {
+  const animalLabel = p.animal === 'gato' ? '🐈 Gatos'
+    : p.animal === 'cao' ? '🐕 Cães'
+    : '🐕 Cães & 🐈 Gatos';
+  const priceOld = p.priceOld
+    ? `<span class="price-compare">${formatPrice(p.priceOld)}</span>`
+    : '';
+  const discount = p.priceOld
+    ? `<span class="price-discount">−${Math.round((1 - p.price / p.priceOld) * 100)}%</span>`
+  : '';
+  const desc = (p.description || 'Produto Aion Pharma para o cuidado do seu pet.').trim();
+  const stockBadge = p.inStock === false
+    ? '<span class="badge badge-muted">Indisponível</span>'
+    : '<span class="badge badge-green">Em estoque</span>';
+  const disabled = p.inStock === false ? 'disabled' : '';
+
+  return `
+  <div class="product-layout">
+    <div class="product-gallery">
+      <div class="product-main-image">
+        <img src="${p.image}" alt="${p.name}" id="main-product-img" onerror="this.src='/assets/images/placeholder-produto.svg'" />
+      </div>
+    </div>
+    <div class="product-info">
+      <div class="product-info-top">
+        <div class="product-brand">Aion Pharma</div>
+        <h1 class="product-title">${p.name}</h1>
+        <div class="product-rating-row">
+          <span class="product-animal">${animalLabel}</span>
+          ${stockBadge}
+        </div>
+        <p class="product-description">${desc}</p>
+      </div>
+      <div class="price-block">
+        <div class="price-row">
+          <span class="price-main">${formatPrice(p.price)}</span>
+          ${priceOld}
+          ${discount}
+        </div>
+        <p class="price-note">ou 3× de ${formatPrice(p.price / 3)} sem juros no cartão</p>
+      </div>
+      <div class="option-group">
+        <div class="option-label">Quantidade</div>
+        <div class="qty-selector">
+          <button type="button" class="qty-btn-lg" onclick="changeProductQty(-1)" aria-label="Diminuir">−</button>
+          <span class="qty-display" id="product-qty">1</span>
+          <button type="button" class="qty-btn-lg" onclick="changeProductQty(1)" aria-label="Aumentar">+</button>
+        </div>
+      </div>
+      <div class="buy-actions">
+        <button type="button" class="btn btn-gold btn-lg" ${disabled} onclick="addProductPageToCart()">Adicionar ao carrinho</button>
+        <button type="button" class="btn btn-outline btn-lg" ${disabled} onclick="buyProductNow()">Comprar agora</button>
+      </div>
+      <div class="shipping-info">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <span>Frete grátis em compras acima de R$ 99</span>
+      </div>
+    </div>
+  </div>
+  <div class="product-tabs">
+    <div class="tab-content active" id="tab-descricao">
+      <h2 class="heading-3" style="margin-bottom:1rem">Sobre o produto</h2>
+      <div class="product-long-desc">${desc.replace(/\n/g, '<br>')}</div>
+    </div>
+  </div>`;
+}
+
+function changeProductQty(delta) {
+  productQty = Math.max(1, productQty + delta);
+  const el = document.getElementById('product-qty');
+  if (el) el.textContent = productQty;
+}
+
+function addProductPageToCart() {
+  if (!PRODUCT_PAGE) return;
+  const p = PRODUCT_PAGE;
+  for (let i = 0; i < productQty; i++) {
+    addToCart(p.id, p.name, p.price, p.image);
+  }
+}
+
+function buyProductNow() {
+  addProductPageToCart();
+  openCart();
+}
+
+window.changeProductQty = changeProductQty;
+window.addProductPageToCart = addProductPageToCart;
+window.buyProductNow = buyProductNow;
