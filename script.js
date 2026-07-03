@@ -514,6 +514,7 @@ function initCatalog() {
       if (homeGrid) renderProducts(homeGrid, CATALOG.slice(0, 4));
       if (catalogGrid) {
         renderProducts(catalogGrid, CATALOG);
+        updateFilterCounts(CATALOG);
         wireCatalogControls();
       }
     })
@@ -610,6 +611,24 @@ function productCardHTML(p) {
 function updateProductCount(n) {
   const el = document.getElementById('product-count');
   if (el) el.textContent = n;
+}
+
+// Contadores da sidebar de filtros — derivados do catálogo real (Tiny/Olist),
+// para não ficarem defasados quando o catálogo muda. Espelha a lógica de applyCatalog.
+function updateFilterCounts(catalog) {
+  const setCount = (id, n) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = n;
+  };
+  const count = (fn) => catalog.filter(fn).length;
+  setCount('count-cao', count((p) => p.animal.includes('cao')));
+  setCount('count-gato', count((p) => p.animal.includes('gato')));
+  setCount('count-bucal', count((p) => p.category === 'bucal'));
+  setCount('count-lar', count((p) => p.category === 'lar'));
+  setCount('count-saude', count((p) => p.category === 'saude'));
+  setCount('count-price-1', count((p) => p.price <= 50));
+  setCount('count-price-2', count((p) => p.price > 50 && p.price <= 120));
+  setCount('count-price-3', count((p) => p.price > 120));
 }
 
 // Filtros + ordenação na página de catálogo
