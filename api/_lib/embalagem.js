@@ -1,15 +1,20 @@
 /* ================================================================
-   Peso e dimensões de embalagem por produto (para cotação de frete)
+   Dimensões de embalagem por produto (para cotação de frete)
    ----------------------------------------------------------------
-   O Tiny ainda NÃO tem peso/dimensões preenchidos nos SKUs
-   (peso_bruto: 0, embalagem vazia), então a cotação real depende
-   destes valores. Eles são casados por palavra-chave do NOME do
-   produto (o carrinho do site guarda `name`, não `sku`).
+   O `peso_bruto` dos SKUs já está preenchido no Tiny e é a fonte
+   única — a cotação NÃO usa o `weight` daqui (ver `olistfrete.js`).
+   As DIMENSÕES, porém, estão vazias em todos os produtos do Tiny,
+   e é isso que este módulo supre. São casadas por palavra-chave do
+   NOME do produto.
 
-   ⚠️  AJUSTAR: os números abaixo são ESTIMATIVAS de partida.
-   Confirme os valores reais (balança + régua, produto JÁ embalado
-   para envio) — o frete cobrado do cliente depende disso.
-   Unidades: peso em KG, dimensões em CM (padrão do Melhor Envio).
+   ⚠️  AJUSTAR: as dimensões abaixo são ESTIMATIVAS de partida.
+   Confirme com régua no produto JÁ embalado para envio — o frete
+   cobrado do cliente depende disso. O ideal é cadastrá-las no Tiny
+   e aposentar este módulo.
+
+   `weight` é mantido só para a simulação (`FRETE_MOCK=true`) e para
+   o `melhorenvio.js` legado; espelha o peso_bruto real do Tiny.
+   Unidades: peso em KG, dimensões em CM.
    Mínimos dos Correios: 16×11×2 cm. Não cadastre abaixo disso.
    ================================================================ */
 
@@ -20,24 +25,25 @@ const PADRAO = { weight: 0.3, width: 16, height: 4, length: 16 };
 // nome do produto já em minúsculas.
 const REGRAS = [
   {
-    // Gel dental TartOff 100 ml (frasco maior)
+    // Gel dental TartOff 100 ml (frasco maior) — SKUs 1174/1172
     match: (n) => (n.includes('gel') || n.includes('tartoff')) && n.includes('100'),
-    embalagem: { weight: 0.2, width: 16, height: 5, length: 16 },
+    embalagem: { weight: 0.112, width: 16, height: 5, length: 16 },
   },
   {
-    // Gel dental TartOff 50 ml (frasco menor)
+    // Gel dental TartOff 50 ml (frasco menor) — SKUs 1175/1173
     match: (n) => (n.includes('gel') || n.includes('tartoff')) && n.includes('50'),
-    embalagem: { weight: 0.12, width: 16, height: 3, length: 16 },
+    embalagem: { weight: 0.058, width: 16, height: 3, length: 16 },
   },
   {
-    // Green Cat — areia de gato (item pesado, dimensiona o frete)
+    // Green Cat — areia de gato (item pesado, dimensiona o frete) — SKU 0005
     match: (n) => n.includes('areia') || n.includes('green cat'),
-    embalagem: { weight: 2.0, width: 25, height: 10, length: 18 }, // AJUSTAR: peso real do pacote
+    embalagem: { weight: 2.01, width: 25, height: 10, length: 18 },
   },
   {
-    // Everbone — ossos de nylon
+    // Everbone — ossos de nylon. Peso varia por tamanho no Tiny
+    // (P 0,053 / M 0,135 / G 0,287); aqui fica a média, que só afeta o mock.
     match: (n) => n.includes('osso') || n.includes('everbone') || n.includes('nylon'),
-    embalagem: { weight: 0.18, width: 16, height: 5, length: 20 },
+    embalagem: { weight: 0.158, width: 16, height: 5, length: 20 },
   },
 ];
 

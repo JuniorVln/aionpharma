@@ -82,12 +82,14 @@ function saveCart() {
   localStorage.setItem('aion_cart', JSON.stringify(cart));
 }
 
-function addToCart(id, name, price, image) {
+// `sku` é obrigatório na cotação de frete da Olist; sem ele o backend
+// precisa resolver o SKU pelo id, custando uma chamada extra ao Tiny.
+function addToCart(id, name, price, image, sku) {
   const existing = cart.find(item => item.id === id);
   if (existing) {
     existing.qty += 1;
   } else {
-    cart.push({ id, name, price, image, qty: 1 });
+    cart.push({ id, sku, name, price, image, qty: 1 });
   }
   invalidarFrete();
   saveCart();
@@ -587,6 +589,7 @@ function productCardHTML(p) {
   const outOfStock = p.inStock === false;
   const safeName = (p.name || '').replace(/'/g, "\\'");
   const safeImage = (p.image || '').replace(/'/g, "\\'");
+  const safeSku = (p.sku || '').replace(/'/g, "\\'");
   return `
   <a href="${productUrl(p)}" class="product-card reveal" data-animal="${p.animal}" data-category="${p.category}" data-price="${p.price}" data-name="${(p.name || '').toLowerCase()}">
     <div class="product-image">
@@ -600,7 +603,7 @@ function productCardHTML(p) {
       <div class="product-footer">
         <div class="product-price">${priceOld}<span class="price-current">${formatPrice(p.price)}</span></div>
         <button type="button" class="add-to-cart-btn" aria-label="Adicionar ao carrinho" ${outOfStock ? 'disabled' : ''}
-          onclick="event.preventDefault(); event.stopPropagation(); addToCart('${p.id}','${safeName}',${p.price},'${safeImage}')">
+          onclick="event.preventDefault(); event.stopPropagation(); addToCart('${p.id}','${safeName}',${p.price},'${safeImage}','${safeSku}')">
           <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
@@ -796,7 +799,7 @@ function addProductPageToCart() {
   if (!PRODUCT_PAGE) return;
   const p = PRODUCT_PAGE;
   for (let i = 0; i < productQty; i++) {
-    addToCart(p.id, p.name, p.price, p.image);
+    addToCart(p.id, p.name, p.price, p.image, p.sku);
   }
 }
 

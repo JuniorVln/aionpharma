@@ -1,10 +1,12 @@
 /* ================================================================
+   LEGADO — não é mais usado pelo /api/frete.
    Cliente Melhor Envio — Cálculo de frete (cotação por CEP)
    Docs: https://docs.melhorenvio.com.br/reference/calculo-de-fretes-por-produtos
    ----------------------------------------------------------------
-   O Olist/Tiny NÃO expõe cotação de frete por API; a etiqueta é que
-   sai pelo Olist Envios dentro do Tiny. Aqui usamos o Melhor Envio
-   só para COTAR (PAC/Sedex/Jadlog...) por CEP no checkout do site.
+   Substituído por `olistfrete.js`: a Olist cota nas mesmas logísticas
+   que emitem a etiqueta, então cotação e custo real não divergem.
+   Mantido enquanto a cotação da Olist não é validada em produção;
+   remover depois disso.
 
    Env necessárias:
    - MELHORENVIO_TOKEN     → token Bearer (Sandbox ou Produção)

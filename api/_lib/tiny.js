@@ -54,6 +54,26 @@ export async function obterEstoque(id) {
   return retorno.produto;
 }
 
+/**
+ * Preenche o `sku` dos itens que vieram sem ele. Carrinhos gravados no
+ * localStorage antes da migração da cotação guardam só o `id` do Tiny, e
+ * a cotação de frete da Olist exige SKU. Itens cujo produto não resolve
+ * saem com `sku` vazio — quem chama decide o que fazer.
+ */
+export async function garantirSkus(itens) {
+  return Promise.all(
+    itens.map(async (item) => {
+      if (item.sku || !item.id) return item;
+      try {
+        const produto = await obterProduto(item.id);
+        return { ...item, sku: produto?.codigo || '' };
+      } catch {
+        return item;
+      }
+    })
+  );
+}
+
 /** Extrai a 1ª imagem de um produto (anexos ou imagens_externas). */
 export function extrairImagem(produto) {
   const anexo = produto?.anexos?.[0]?.anexo;
@@ -93,7 +113,7 @@ export async function emitirNotaFiscal(idNota) {
 /* ── Helper: montar pedido a partir do carrinho ─────────────── */
 
 export function montarPedido({ cliente, itens, observacoes = '', situacao = 'aberto', frete = null }) {
-  // frete = { id, name, company, price } escolhido pelo cliente (Melhor Envio).
+  // frete = { id, name, company, price } escolhido pelo cliente na cotação.
   // O valor vai no pedido para conciliar com a etiqueta gerada no Olist Envios.
   const valorFrete = frete && Number(frete.price) > 0 ? Number(frete.price) : 0;
   const formaEnvio = frete ? [frete.company, frete.name].filter(Boolean).join(' ') : '';
@@ -135,6 +155,7 @@ export default {
   pesquisarProdutos,
   obterProduto,
   obterEstoque,
+  garantirSkus,
   extrairImagem,
   incluirPedido,
   obterPedido,

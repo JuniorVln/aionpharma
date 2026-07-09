@@ -1,16 +1,17 @@
 /* ================================================================
    POST /api/frete
-   Cota o frete (Melhor Envio) para um CEP de destino + itens do
+   Cota o frete (Olist/Tiny) para um CEP de destino + itens do
    carrinho. O frontend chama este endpoint quando o cliente digita
-   o CEP no checkout, mostra as opções (PAC/Sedex/...) e o cliente
-   escolhe uma — que depois vai junto no /api/checkout.
+   o CEP no checkout, mostra as opções (normal/expressa/...) e o
+   cliente escolhe uma — que depois vai junto no /api/checkout.
    ----------------------------------------------------------------
-   Body (JSON): { "cep": "20000-000", "itens": [{ id, name, price, qty }] }
+   Body (JSON): { "cep": "20000-000", "itens": [{ id, sku, name, price, qty }] }
    Resposta:    { "opcoes": [{ id, name, company, price, prazo, ... }],
                   "freteGratis": boolean }
    ================================================================ */
 
-import { cotarFrete } from './_lib/melhorenvio.js';
+import { cotarFrete } from './_lib/olistfrete.js';
+import { garantirSkus } from './_lib/tiny.js';
 
 async function readJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -33,7 +34,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Informe o CEP e os itens do carrinho.' });
     }
 
-    const opcoes = await cotarFrete({ cepDestino: cep, itens });
+    // A cotação da Olist é por SKU; carrinhos antigos só guardam o `id`.
+    const itensComSku = await garantirSkus(itens);
+    const semSku = itensComSku.filter((it) => !it.sku);
+    if (semSku.length) {
+      const nomes = semSku.map((it) => it.name || it.id).join(', ');
+      return res.status(422).json({ error: `Não foi possível identificar o SKU de: ${nomes}. Remova e adicione o item ao carrinho novamente.` });
+    }
+
+    const opcoes = await cotarFrete({ cepDestino: cep, itens: itensComSku });
 
     // Frete grátis acima do limite (FREE_SHIPPING_THRESHOLD). 0 = desativado.
     const limite = Number(process.env.FREE_SHIPPING_THRESHOLD || 0);
