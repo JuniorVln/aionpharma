@@ -7,10 +7,14 @@
    etiqueta que a loja emite depois. Substitui a cotação que antes
    passava pelo Melhor Envio (contas distintas => preços divergentes).
 
+   Requer que os produtos estejam mapeados como anúncios na integração
+   (ver `olist-produtos.js`), senão a Olist responde "Item não encontrado".
+
    Env necessárias:
    - TINY_TOKEN        → token da conta na Olist (o mesmo do resto da API)
-   - TINY_ID_ECOMMERCE → id da integração e-commerce cadastrada na Olist
-   - TINY_CEP_ORIGEM   → opcional; se ausente, a Olist usa o CEP da empresa
+   - TINY_ID_ECOMMERCE → id da integração "API do ERP" na Olist (17197)
+   - TINY_CEP_ORIGEM   → opcional; deixe vazio para a Olist usar o CEP da
+                         empresa, que é o mesmo de onde o Olist Envios coleta
    - FRETE_MOCK=true   → simula a cotação sem chamar a API (dev/testes)
    ================================================================ */
 
@@ -18,7 +22,11 @@ import { resolverEmbalagem } from './embalagem.js';
 
 const BASE_URL = 'https://api.tiny.com.br/webhook/api/v1/parceiro';
 
-/** Rótulos amigáveis para o `tipo_entrega` devolvido pela Olist. */
+/**
+ * Rótulos para o `tipo_entrega`. Só entram em cena como fallback: a
+ * conta devolve `nao_definida` em todas as cotações, e o nome útil para
+ * o cliente vem em `nome_forma_frete` ("Jadlog - Normal", "Correios - PAC").
+ */
 const LABEL_TIPO_ENTREGA = {
   normal: 'Normal',
   expressa: 'Expressa',
@@ -94,7 +102,7 @@ function normalizarOpcao(c) {
   const prazo = Number(c.prazo);
   return {
     id: `${c.id_forma_envio}:${c.id_forma_frete}`,
-    name: LABEL_TIPO_ENTREGA[tipo] || c.nome_forma_frete || 'Entrega',
+    name: c.nome_forma_frete || LABEL_TIPO_ENTREGA[tipo] || 'Entrega',
     company: c.nome_forma_envio || '',
     price: Number(c.preco),
     prazo,
@@ -130,9 +138,12 @@ export async function cotarFrete({ cepDestino, itens }) {
     cep_destino: to,
     itens: montarItens(itens),
     opcoes: {
-      cotar_agrupado: true,        // um frete para o carrinho todo, não por item
+      cotar_agrupado: true,         // um frete para o carrinho todo, não por item
       considerar_dias_preparacao: true,
-      agrupar_tipo_entrega: true,  // uma opção por tipo (normal/expressa/...)
+      // Agrupar colapsaria tudo numa opção só: a conta devolve
+      // `tipo_entrega: nao_definida` em todas as transportadoras. Sem
+      // agrupar, o cliente escolhe entre Jadlog, Loggi, GFL, PAC e Sedex.
+      agrupar_tipo_entrega: false,
     },
   };
 
