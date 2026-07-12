@@ -123,6 +123,21 @@ só a emissão da nota fica manual no Tiny.
 
 ---
 
+## CRM / Cupons (Supabase)
+
+Painel em `/admin` para influencers e cupons. Schema em `supabase/schema.sql`.
+
+| Variável | Onde |
+|---|---|
+| `SUPABASE_URL` | Vercel + `.env` |
+| `SUPABASE_ANON_KEY` | Vercel + `.env` + `admin/.env` como `VITE_SUPABASE_ANON_KEY` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Só Vercel / `.env` (nunca no browser) |
+| `VITE_SUPABASE_URL` | `admin/.env` (mesmo valor de `SUPABASE_URL`) |
+
+Detalhes: `admin/README.md`.
+
+---
+
 ## Endpoints do backend (já implementados)
 
 | Rota | O que faz |
@@ -131,6 +146,9 @@ só a emissão da nota fica manual no Tiny.
 | `POST /api/frete` | Cota o frete por CEP (Melhor Envio) para os itens do carrinho |
 | `POST /api/checkout` | Cria o pedido no Tiny (com frete) + inicia o pagamento no Mercado Pago |
 | `POST /api/webhook` | Recebe a confirmação do Mercado Pago e atualiza o pedido no Tiny |
+| `POST /api/cupons/validar` | Valida cupom (público) e devolve % de desconto |
+| `GET/POST/PATCH /api/admin/influencers` | CRUD de influencers (auth Supabase) |
+| `GET/POST/PATCH /api/admin/coupons` | CRUD de cupons; `?id=&stats=1` para relatório |
 
 ---
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Produto — Aion Pharma</title>
   <meta name="description" content="Produto Aion Pharma para saúde e bem-estar do seu pet." />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=5" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🐾</text></svg>" />
   <style>
     .breadcrumb {
@@ -206,10 +206,7 @@
 <header id="header">
   <div class="container">
     <div class="header-inner">
-      <a href="index.html" class="logo">
-        <span class="logo-name">AION PHARMA</span>
-        <span class="logo-tagline">Ciência para Pets</span>
-      </a>
+      <a href="index.html" class="logo"><img src="assets/brand/logo-on-dark.svg" alt="Aion Pharma" class="logo-img" /></a>
       <nav class="nav-links" aria-label="Navegação principal">
         <a href="index.html">Início</a>
         <a href="produtos.html" class="active">Produtos</a>
@@ -260,10 +257,7 @@
   <div class="container">
     <div class="footer-top">
       <div class="footer-brand">
-        <a href="index.html" class="logo">
-          <span class="logo-name">AION PHARMA</span>
-          <span class="logo-tagline">Ciência para Pets</span>
-        </a>
+        <a href="index.html" class="logo"><img src="assets/brand/logo-on-dark.svg" alt="Aion Pharma" class="logo-img" /></a>
         <p>Desenvolvemos produtos veterinários com rigor científico e carinho pelos animais. Porque o seu pet merece o melhor cuidado.</p>
         <div class="footer-social">
           <a href="https://www.instagram.com/tartoff.oficial/" class="social-link" target="_blank" rel="noopener" aria-label="Instagram">
@@ -340,8 +334,19 @@
       </div>
       <div class="cart-frete-options" id="cart-frete-options"></div>
     </div>
+    <div class="cart-cupom" id="cart-cupom">
+      <label class="cart-frete-label" for="cart-cupom-input">Cupom de desconto</label>
+      <div class="cart-frete-row">
+        <input id="cart-cupom-input" class="cart-cep-input" type="text"
+               placeholder="Ex: MARIA10" maxlength="40" autocomplete="off"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();aplicarCupom();}" />
+        <button class="btn btn-primary btn-sm" type="button" id="cart-cupom-btn" onclick="aplicarCupom()">Aplicar</button>
+      </div>
+      <p class="frete-msg" id="cart-cupom-msg" style="display:none"></p>
+    </div>
     <div class="cart-totais" id="cart-totais">
       <div class="cart-line"><span>Subtotal</span><span id="cart-subtotal-display">R$ 0,00</span></div>
+      <div class="cart-line cart-line-discount" id="cart-desconto-line" style="display:none"><span id="cart-desconto-label">Desconto</span><span id="cart-desconto-display">-R$ 0,00</span></div>
       <div class="cart-line" id="cart-frete-line" style="display:none"><span id="cart-frete-label">Frete</span><span id="cart-frete-display">R$ 0,00</span></div>
     </div>
     <div class="cart-total">

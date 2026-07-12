@@ -5,9 +5,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "build": "npm run build --prefix admin",
+    "dev:admin": "npm run dev --prefix admin"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
   }
 }

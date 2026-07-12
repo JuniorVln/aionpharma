@@ -10,6 +10,7 @@
 
 import { obterPagamento } from './_lib/mercadopago.js';
 import { alterarSituacaoPedido, gerarNotaFiscal } from './_lib/tiny.js';
+import { confirmarResgatePorPedido } from './_lib/cupons.js';
 
 export default async function handler(req, res) {
   // Responda 200 rápido — o MP reenvia se não receber 200.
@@ -36,6 +37,15 @@ export default async function handler(req, res) {
 
     if (status === 'approved') {
       await alterarSituacaoPedido(pedidoId, 'aprovado');
+
+      // Registra uso do cupom (idempotente por pedido_id)
+      try {
+        if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+          await confirmarResgatePorPedido(pedidoId);
+        }
+      } catch (cupomErr) {
+        console.error('[/api/webhook] cupom:', cupomErr.message);
+      }
 
       if (String(process.env.AUTO_EMIT_NFE).toLowerCase() === 'true') {
         try {

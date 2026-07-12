@@ -1,26 +1,29 @@
 /* ================================================
    AION PHARMA — Design System
-   Verde musgo + Creme + Dourado
+   Navy + Cyan (brand oficial)
    ================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
 
 /* ── Tokens ───────────────────────────────────── */
 :root {
-  /* Colors */
-  --clr-primary:      #2D4A35;   /* Verde musgo escuro */
-  --clr-primary-lt:  #3D6147;   /* Verde musgo médio */
-  --clr-primary-pale:#EBF2EC;   /* Verde bem claro */
-  --clr-gold:         #C9A84C;  /* Dourado acento */
-  --clr-gold-lt:      #E8C96D;  /* Dourado claro hover */
-  --clr-cream:        #F5F0E8;  /* Creme fundo */
-  --clr-cream-dk:     #EDE7D9;  /* Creme escuro */
-  --clr-bg:           #FAFAF7;  /* Fundo geral */
-  --clr-dark:         #1A2620;  /* Quase preto */
-  --clr-text:         #2C3A30;  /* Texto principal */
-  --clr-text-muted:   #6B7D6F;  /* Texto secundário */
-  --clr-border:       #DDE8DE;  /* Bordas */
+  /* Colors — brand oficial */
+  --clr-primary:      #051231;   /* Navy Aion */
+  --clr-primary-lt:   #0A1F44;   /* Navy médio */
+  --clr-primary-pale: #E8EEF6;   /* Azul bem claro */
+  --clr-gold:         #0099D6;   /* Ciano acento (legado: gold) */
+  --clr-gold-lt:      #33B4E5;   /* Ciano claro hover */
+  --clr-accent:       #0099D6;
+  --clr-accent-deep:  #0054A6;
+  --clr-cream:        #F0F4FA;   /* Fundo suave azul */
+  --clr-cream-dk:     #E2E8F2;
+  --clr-bg:           #F7FAFC;
+  --clr-dark:         #051231;
+  --clr-text:         #0F1B33;
+  --clr-text-muted:   #5D7B9D;
+  --clr-border:       #D5DEEB;
   --clr-white:        #FFFFFF;
+  --clr-pharma:       #7386A3;
 
   /* Typography */
   --font-heading: 'Outfit', sans-serif;
@@ -157,18 +160,18 @@ h1, h2, h3, h4, h5, h6 {
 .btn-primary:hover {
   background: var(--clr-primary-lt);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(45,74,53,.35);
+  box-shadow: 0 8px 24px rgba(5, 18, 49, .35);
 }
 
 .btn-gold {
-  background: var(--clr-gold);
-  color: var(--clr-dark);
-  box-shadow: 0 4px 14px rgba(201,168,76,.35);
+  background: linear-gradient(135deg, #0099D6 0%, #0054A6 100%);
+  color: var(--clr-white);
+  box-shadow: 0 4px 14px rgba(0, 153, 214, .35);
 }
 .btn-gold:hover {
-  background: var(--clr-gold-lt);
+  background: linear-gradient(135deg, #33B4E5 0%, #0099D6 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(201,168,76,.4);
+  box-shadow: 0 8px 24px rgba(0, 153, 214, .4);
 }
 
 .btn-outline {
@@ -286,9 +289,17 @@ h1, h2, h3, h4, h5, h6 {
 /* Logo */
 .logo {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   flex-shrink: 0;
   text-decoration: none;
+  gap: 0.5rem;
+}
+.logo-img {
+  display: block;
+  height: 40px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
 }
 .logo-name {
   font-family: var(--font-heading);
@@ -304,7 +315,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 500;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--clr-gold);
+  color: var(--clr-pharma);
   line-height: 1;
   margin-top: 2px;
 }
@@ -422,7 +433,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--clr-dark) 0%, var(--clr-primary) 60%, #3a5e45 100%);
+  background: linear-gradient(135deg, #051231 0%, #0A1F44 55%, #0054A6 100%);
 }
 
 .hero-bg {
@@ -1369,7 +1380,13 @@ a.product-card {
 .footer-brand .logo {
   margin-bottom: var(--space-5);
 }
+.footer-brand .logo-img {
+  height: 44px;
+  max-width: 220px;
+  filter: none;
+}
 .footer-brand .logo-name { color: var(--clr-white); }
+.footer-brand .logo-tagline { color: var(--clr-pharma); }
 .footer-brand p {
   font-size: 0.9375rem;
   line-height: 1.7;
@@ -1654,6 +1671,22 @@ a.product-card {
 .frete-erro { color: #c0392b; }
 .frete-ok { color: #1e7e34; font-weight: 600; }
 .cart-totais { margin-bottom: var(--space-3); display: grid; gap: 0.25rem; }
+.cart-cupom {
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px dashed var(--clr-border);
+}
+.cart-line-discount span:last-child { color: #1e7e34; font-weight: 600; }
+.cupom-remover {
+  background: none;
+  border: none;
+  color: var(--clr-text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+  font-size: inherit;
+  padding: 0;
+}
 .cart-line {
   display: flex;
   justify-content: space-between;
@@ -1867,28 +1900,29 @@ a.product-card {
    ================================================ */
 
 :root {
-  --clr-primary: #4d5740;
-  --clr-primary-lt: #647154;
-  --clr-primary-pale: #eef2e8;
-  --clr-gold: #d98f42;
-  --clr-gold-lt: #f0a85e;
-  --clr-cream: #f0eee9;
-  --clr-cream-dk: #e4e0d7;
-  --clr-bg: #f7f6f2;
-  --clr-dark: #151713;
-  --clr-text: #292d26;
-  --clr-text-muted: #6f7469;
-  --clr-border: #e5e2da;
+  --clr-primary: #051231;
+  --clr-primary-lt: #0A1F44;
+  --clr-primary-pale: #E8EEF6;
+  --clr-gold: #0099D6;
+  --clr-gold-lt: #33B4E5;
+  --clr-cream: #F0F4FA;
+  --clr-cream-dk: #E2E8F2;
+  --clr-bg: #F7FAFC;
+  --clr-dark: #051231;
+  --clr-text: #0F1B33;
+  --clr-text-muted: #5D7B9D;
+  --clr-border: #D5DEEB;
   --clr-white: #ffffff;
-  --clr-hero: #bdcdd0;
+  --clr-hero: #0A1F44;
+  --clr-pharma: #7386A3;
   --radius-sm: 0.5rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.5rem;
-  --shadow-sm: 0 2px 10px rgba(21, 23, 19, .04);
-  --shadow-md: 0 10px 30px rgba(21, 23, 19, .07);
-  --shadow-lg: 0 20px 50px rgba(21, 23, 19, .10);
-  --shadow-xl: 0 28px 70px rgba(21, 23, 19, .14);
+  --shadow-sm: 0 2px 10px rgba(5, 18, 49, .05);
+  --shadow-md: 0 10px 30px rgba(5, 18, 49, .08);
+  --shadow-lg: 0 20px 50px rgba(5, 18, 49, .11);
+  --shadow-xl: 0 28px 70px rgba(5, 18, 49, .14);
   --max-w: 1240px;
 }
 
@@ -1960,12 +1994,12 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .btn-gold {
-  background: var(--clr-primary);
+  background: linear-gradient(135deg, #0099D6 0%, #0054A6 100%);
   color: var(--clr-white);
 }
 
 .btn-gold:hover {
-  background: var(--clr-dark);
+  background: linear-gradient(135deg, #33B4E5 0%, #0099D6 100%);
   color: var(--clr-white);
 }
 
@@ -1989,7 +2023,7 @@ h1, h2, h3, h4, h5, h6,
 
 #announcement-bar strong,
 #announcement-bar a {
-  color: #f3c484;
+  color: var(--clr-gold-lt);
 }
 
 #header {
@@ -1998,7 +2032,7 @@ h1, h2, h3, h4, h5, h6,
   z-index: 120;
   height: auto;
   padding: .55rem 0;
-  background: rgba(247, 246, 242, .92);
+  background: rgba(247, 250, 252, .92);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border: 0;
@@ -2055,8 +2089,13 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .logo-tagline {
-  color: var(--clr-primary);
+  color: var(--clr-pharma);
   letter-spacing: .16em;
+}
+
+.logo-img {
+  height: 36px;
+  max-width: 180px;
 }
 
 .nav-links {
@@ -2498,9 +2537,12 @@ h1, h2, h3, h4, h5, h6,
   gap: 3rem;
 }
 
-.featured-content h2,
-.newsletter-content h2 {
+.featured-content h2 {
   color: var(--clr-dark);
+}
+
+.newsletter-content h2 {
+  color: #ffffff;
 }
 
 .featured-content h2 span {
@@ -2619,7 +2661,7 @@ h1, h2, h3, h4, h5, h6,
   max-width: 1320px;
   margin: 4rem auto 3rem;
   border-radius: 1.2rem;
-  background: var(--clr-hero);
+  background: linear-gradient(135deg, #051231 0%, #0A1F44 60%, #0054A6 100%);
 }
 
 #newsletter .container {
@@ -2630,14 +2672,26 @@ h1, h2, h3, h4, h5, h6,
   display: none;
 }
 
-.newsletter-content p,
+.newsletter-content h2 {
+  color: #ffffff;
+}
+
+.newsletter-content p {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.newsletter-content p strong,
+.newsletter-content .section-tag {
+  color: var(--clr-gold-lt);
+}
+
 .newsletter-privacy {
-  color: rgba(21,23,19,.66);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .newsletter-input {
   background: var(--clr-white);
-  border-color: rgba(21,23,19,.08);
+  border-color: transparent;
   color: var(--clr-dark);
 }
 

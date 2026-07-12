@@ -6,10 +6,36 @@
 // ── State ─────────────────────────────────────────
 let cart = [];
 let selectedFrete = null; // { id, name, company, price, prazo }
+/** Cupom aplicado: { codigo, desconto_percent, influencer? } | null */
+let appliedCoupon = null;
+
+function loadCoupon() {
+  try {
+    appliedCoupon = JSON.parse(localStorage.getItem('aion_coupon') || 'null');
+  } catch {
+    appliedCoupon = null;
+  }
+}
+
+function saveCoupon() {
+  if (appliedCoupon) {
+    localStorage.setItem('aion_coupon', JSON.stringify(appliedCoupon));
+  } else {
+    localStorage.removeItem('aion_coupon');
+  }
+}
+
+function getDiscountAmount(subtotal) {
+  if (!appliedCoupon) return 0;
+  const pct = Number(appliedCoupon.desconto_percent) || 0;
+  return Math.round(subtotal * (pct / 100) * 100) / 100;
+}
 
 // ── Init ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   loadCart();
+  loadCoupon();
+  renderCartUI();
   initScrollBehavior();
   initRevealAnimations();
   initMobileNav();
@@ -75,7 +101,6 @@ function loadCart() {
   } catch {
     cart = [];
   }
-  renderCartUI();
 }
 
 function saveCart() {
@@ -189,11 +214,43 @@ function renderCartUI() {
     container.appendChild(itemEl);
   });
 
-  // Subtotal + frete + total
+  // Subtotal + desconto + frete + total
   const subtotal = getCartTotal();
+  const desconto = getDiscountAmount(subtotal);
   const freteVal = selectedFrete ? Number(selectedFrete.price) : 0;
   const subEl = document.getElementById('cart-subtotal-display');
   if (subEl) subEl.textContent = formatPrice(subtotal);
+
+  const descLine = document.getElementById('cart-desconto-line');
+  const descDisp = document.getElementById('cart-desconto-display');
+  const descLabel = document.getElementById('cart-desconto-label');
+  if (descLine && descDisp) {
+    if (appliedCoupon && desconto > 0) {
+      descLine.style.display = 'flex';
+      if (descLabel) {
+        descLabel.textContent = `Desconto (${appliedCoupon.codigo} · ${appliedCoupon.desconto_percent}%)`;
+      }
+      descDisp.textContent = `−${formatPrice(desconto)}`;
+    } else {
+      descLine.style.display = 'none';
+    }
+  }
+
+  const cupomInput = document.getElementById('cart-cupom-input');
+  const cupomMsg = document.getElementById('cart-cupom-msg');
+  const cupomBtn = document.getElementById('cart-cupom-btn');
+  if (cupomInput && appliedCoupon) {
+    cupomInput.value = appliedCoupon.codigo;
+    if (cupomMsg) {
+      cupomMsg.style.display = 'block';
+      cupomMsg.className = 'frete-msg frete-ok';
+      cupomMsg.innerHTML = `Cupom <strong>${appliedCoupon.codigo}</strong> aplicado · <button type="button" class="cupom-remover" onclick="removerCupom()">Remover</button>`;
+    }
+    if (cupomBtn) cupomBtn.textContent = 'OK';
+  } else if (cupomBtn) {
+    cupomBtn.textContent = 'Aplicar';
+  }
+
   const freteLine = document.getElementById('cart-frete-line');
   const freteDisp = document.getElementById('cart-frete-display');
   if (freteLine && freteDisp) {
@@ -204,7 +261,65 @@ function renderCartUI() {
       freteLine.style.display = 'none';
     }
   }
-  if (totalEl) totalEl.textContent = formatPrice(subtotal + freteVal);
+  if (totalEl) totalEl.textContent = formatPrice(Math.max(0, subtotal - desconto) + freteVal);
+}
+
+/* ── Cupom de desconto ───────────────────────────────────────── */
+
+async function aplicarCupom() {
+  const input = document.getElementById('cart-cupom-input');
+  const msg = document.getElementById('cart-cupom-msg');
+  const btn = document.getElementById('cart-cupom-btn');
+  const codigo = (input?.value || '').trim().toUpperCase();
+  if (!codigo) {
+    if (msg) {
+      msg.style.display = 'block';
+      msg.className = 'frete-msg frete-erro';
+      msg.textContent = 'Digite o código do cupom.';
+    }
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    const r = await fetch('/api/cupons/validar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codigo }),
+    });
+    const data = await r.json();
+    if (!r.ok || !data.ok) throw new Error(data.error || 'Cupom inválido');
+    appliedCoupon = {
+      codigo: data.codigo,
+      desconto_percent: data.desconto_percent,
+      influencer: data.influencer || null,
+    };
+    saveCoupon();
+    renderCartUI();
+    renderCheckoutResumo();
+    showToast(`🎉 Cupom <strong>${data.codigo}</strong> · ${data.desconto_percent}% OFF`);
+  } catch (err) {
+    appliedCoupon = null;
+    saveCoupon();
+    if (msg) {
+      msg.style.display = 'block';
+      msg.className = 'frete-msg frete-erro';
+      msg.textContent = err.message || 'Cupom inválido';
+    }
+    renderCartUI();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = appliedCoupon ? 'OK' : 'Aplicar'; }
+  }
+}
+
+function removerCupom() {
+  appliedCoupon = null;
+  saveCoupon();
+  const input = document.getElementById('cart-cupom-input');
+  const msg = document.getElementById('cart-cupom-msg');
+  if (input) input.value = '';
+  if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
+  renderCartUI();
+  renderCheckoutResumo();
 }
 
 /* ── Frete (cotação via /api/frete) ───────────────────────────── */
@@ -360,12 +475,17 @@ function renderCheckoutResumo() {
   const box = document.getElementById('checkout-resumo');
   if (!box) return;
   const subtotal = getCartTotal();
+  const desconto = getDiscountAmount(subtotal);
   const frete = selectedFrete ? Number(selectedFrete.price) : 0;
   const freteLabel = selectedFrete ? [selectedFrete.company, selectedFrete.name].filter(Boolean).join(' ') : '';
+  const descontoLine = appliedCoupon && desconto > 0
+    ? `<div class="cart-line cart-line-discount"><span>Desconto (${appliedCoupon.codigo})</span><span>−${formatPrice(desconto)}</span></div>`
+    : '';
   box.innerHTML = `
     <div class="cart-line"><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
+    ${descontoLine}
     <div class="cart-line"><span>Frete (${freteLabel})</span><span>${frete === 0 ? 'Grátis' : formatPrice(frete)}</span></div>
-    <div class="cart-line checkout-resumo-total"><span>Total</span><span>${formatPrice(subtotal + frete)}</span></div>`;
+    <div class="cart-line checkout-resumo-total"><span>Total</span><span>${formatPrice(Math.max(0, subtotal - desconto) + frete)}</span></div>`;
 }
 
 async function enviarCheckout(event) {
@@ -387,7 +507,12 @@ async function enviarCheckout(event) {
     const r = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cliente, itens: cart, frete: selectedFrete }),
+      body: JSON.stringify({
+        cliente,
+        itens: cart,
+        frete: selectedFrete,
+        cupom: appliedCoupon?.codigo || null,
+      }),
     });
     const data = await r.json();
     if (!r.ok || !data.preferenceId) throw new Error(data.detail || data.error || 'Falha no checkout');

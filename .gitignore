@@ -1,7 +1,14 @@
 Prospects/platform-clone/node_modules/
 node_modules/
+admin/node_modules/
+admin/dist/
 .env
 .env.local
+admin/.env
+admin/.env.local
+scripts/.supabase-keys.json
+scripts/.supabase-setup/
+public/
 .DS_Store
 .playwright-mcp/
 

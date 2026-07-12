@@ -62,7 +62,7 @@ export function HeroSection() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-col gap-8 w-full lg:w-[350px] xl:w-[450px] shrink-0 pt-6"
+            className="flex flex-col gap-8 w-full lg:w-[175px] xl:w-[225px] shrink-0 pt-6"
           >
             <div>
               <h2 className="text-2xl font-semibold text-white tracking-tight mb-4">Esqueça os CRMs do passado.</h2>
