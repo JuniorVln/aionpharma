@@ -36,9 +36,17 @@ async function call(service, params = {}) {
 
 /* ── Produtos ───────────────────────────────────────────────── */
 
-/** Lista a página do catálogo (sem `pesquisa`, retorna o catálogo). */
-export async function pesquisarProdutos({ pesquisa = '', pagina = 1 } = {}) {
-  const retorno = await call('produtos.pesquisa', { pesquisa, pagina });
+/**
+ * Lista a página do catálogo (sem `pesquisa`, retorna o catálogo).
+ * Sem `idListaPreco`, o Tiny devolve o preço de CADASTRO — que NÃO
+ * acompanha as tabelas (Cliente Final / Lojista / Distribuição).
+ * A loja B2C usa a lista "Cliente Final" (env TINY_ID_LISTA_PRECO).
+ */
+export async function pesquisarProdutos({ pesquisa = '', pagina = 1, idListaPreco } = {}) {
+  const params = { pesquisa, pagina };
+  const lista = idListaPreco || process.env.TINY_ID_LISTA_PRECO;
+  if (lista) params.idListaPreco = String(lista);
+  const retorno = await call('produtos.pesquisa', params);
   return (retorno.produtos || []).map((p) => p.produto);
 }
 

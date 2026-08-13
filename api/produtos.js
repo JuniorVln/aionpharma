@@ -67,16 +67,25 @@ export default async function handler(req, res) {
 
   try {
     const busca = (req.query?.busca || '').toString();
-    const lista = await pesquisarProdutos({ pesquisa: busca });
+    // 321 = lista "Cliente Final" na conta Aion. Sem isso a vitrine
+    // ignora as tabelas da Olist e mostra só o preço de cadastro.
+    const idListaPreco = process.env.TINY_ID_LISTA_PRECO || '321';
+    const lista = await pesquisarProdutos({ pesquisa: busca, idListaPreco });
     const visiveis = lista
       .filter((p) => !isOculto(p))
       .sort((a, b) => prioridade(a.nome) - prioridade(b.nome));
 
-    // Enriquece com imagem/descrição (produto.obter), concorrência limitada.
+    // Enriquece com imagem/descrição (produto.obter). O obter devolve o
+    // preço de CADASTRO; o preço da vitrine tem que continuar o da lista
+    // (produtos.pesquisa + idListaPreco), senão a tabela da Olist não vale.
     const detalhados = await mapLimit(visiveis, 3, async (p) => {
       try {
         const full = await obterProduto(p.id);
-        return normalizar(full);
+        return normalizar({
+          ...full,
+          preco: p.preco,
+          preco_promocional: p.preco_promocional,
+        });
       } catch {
         return normalizar(p); // fallback sem imagem se obter falhar
       }
