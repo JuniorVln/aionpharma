@@ -74,7 +74,7 @@ export async function consultarCnpj(cnpj) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 4000);
   try {
-    const r = await fetch(`https://brasilapi.com.br/api/v1/cnpj/v1/${numero}`, { signal: ctrl.signal });
+    const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${numero}`, { signal: ctrl.signal });
     if (r.status === 404) return { ok: false, encontrado: false };
     if (!r.ok) return { ok: false, indisponivel: true };
     const d = await r.json();
