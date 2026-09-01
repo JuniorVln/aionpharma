@@ -138,11 +138,47 @@ Detalhes: `admin/README.md`.
 
 ---
 
+## Área de compra com CNPJ (B2B)
+
+Página pública `/b2b.html` ("Área do Lojista"): o cliente cadastra o CNPJ, entra na
+hora e passa a ver **a tabela de preço dele** no catálogo inteiro.
+
+Como funciona:
+
+1. **Cadastro automático.** O CNPJ é validado no dígito (aceita o formato alfanumérico
+   novo) e conferido na consulta pública da BrasilAPI — CNPJ inexistente é recusado; se
+   a consulta estiver fora do ar, o cadastro segue com o que o lojista digitou.
+2. **Toda conta nasce como Lojista** (`TINY_ID_LISTA_PRECO_LOJISTA`, 103 na conta Aion).
+   No painel `/admin` → **Contas CNPJ** dá para promover para **Distribuição**
+   (`TINY_ID_LISTA_PRECO_DISTRIBUICAO`, 102), desativar a conta ou resetar a senha.
+3. **Quem decide o preço é o servidor.** A sessão é um JWT próprio (`B2B_JWT_SECRET`) que
+   vai como `Bearer` em `/api/produtos` e `/api/checkout`; o checkout **reconfere cada
+   preço na Olist** antes de criar o pedido, então mexer no carrinho pelo navegador não
+   muda quanto o cliente paga. Resposta com preço B2B nunca entra no cache da Vercel.
+4. **Pedido sai no CNPJ da conta** (Pessoa Jurídica), com a observação
+   `Pedido B2B — <razão social>, tabela <nível>` para conferência no Tiny.
+5. **Cupom não acumula** com preço de lojista — a tabela já é o desconto.
+
+Configuração:
+
+- Rodar `supabase/schema-b2b.sql` no SQL Editor do Supabase (cria `b2b_accounts` e
+  `b2b_orders`, ambas acessíveis só pela service role).
+- Preencher `B2B_JWT_SECRET`, `TINY_ID_LISTA_PRECO_LOJISTA` e
+  `TINY_ID_LISTA_PRECO_DISTRIBUICAO` nas 3 envs da Vercel (e no `.env` local).
+- Lembrete: esta loja sobe em produção com `npx vercel --prod` — push no GitHub gera
+  só Preview.
+
+---
+
 ## Endpoints do backend (já implementados)
 
 | Rota | O que faz |
 |---|---|
-| `GET /api/produtos` | Lista os produtos do Tiny já normalizados para o site |
+| `GET /api/produtos` | Lista os produtos do Tiny já normalizados (com `Bearer` de lojista, devolve a tabela B2B) |
+| `POST /api/b2b/cadastro` | Abre conta com CNPJ e já devolve a sessão |
+| `POST /api/b2b/login` | Sessão do lojista (CNPJ ou e-mail + senha) |
+| `GET/PATCH /api/b2b/me` | Dados da conta logada / atualiza contato e endereço padrão |
+| `GET/PATCH /api/admin/b2b` | Contas CNPJ: nível, ativar/desativar, resetar senha (auth Supabase) |
 | `POST /api/frete` | Cota o frete por CEP (Melhor Envio) para os itens do carrinho |
 | `POST /api/checkout` | Cria o pedido no Tiny (com frete) + inicia o pagamento no Mercado Pago |
 | `POST /api/webhook` | Recebe a confirmação do Mercado Pago e atualiza o pedido no Tiny |

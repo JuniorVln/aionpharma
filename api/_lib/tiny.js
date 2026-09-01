@@ -50,6 +50,42 @@ export async function pesquisarProdutos({ pesquisa = '', pagina = 1, idListaPrec
   return (retorno.produtos || []).map((p) => p.produto);
 }
 
+/**
+ * Mapa de preços da lista informada, indexado por id e por SKU.
+ * Usado no checkout para NUNCA confiar no preço vindo do navegador —
+ * o carrinho mora no localStorage e é editável pelo cliente.
+ */
+export async function mapaDePrecos({ idListaPreco, maxPaginas = 5 } = {}) {
+  const produtos = [];
+  for (let pagina = 1; pagina <= maxPaginas; pagina++) {
+    let lote = [];
+    try {
+      lote = await pesquisarProdutos({ idListaPreco, pagina });
+    } catch (err) {
+      // "A consulta não retornou registros" na página seguinte é fim de
+      // catálogo, não falha — só propaga se nem a 1ª página veio.
+      if (pagina === 1) throw err;
+      break;
+    }
+    if (!lote.length) break;
+    produtos.push(...lote);
+  }
+
+  const mapa = new Map();
+  for (const p of produtos) {
+    const promo = Number(p.preco_promocional || 0);
+    const info = {
+      id: String(p.id),
+      sku: p.codigo || '',
+      nome: p.nome,
+      preco: promo > 0 ? promo : Number(p.preco || 0),
+    };
+    mapa.set(String(p.id), info);
+    if (p.codigo) mapa.set(`sku:${String(p.codigo).toUpperCase()}`, info);
+  }
+  return mapa;
+}
+
 /** Detalhe completo de um produto (descrição, imagens, etc.). */
 export async function obterProduto(id) {
   const retorno = await call('produto.obter', { id });
@@ -161,6 +197,7 @@ export function montarPedido({ cliente, itens, observacoes = '', situacao = 'abe
 
 export default {
   pesquisarProdutos,
+  mapaDePrecos,
   obterProduto,
   obterEstoque,
   garantirSkus,

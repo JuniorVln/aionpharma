@@ -456,3 +456,9 @@ select:focus {
     padding: 1.25rem;
   }
 }
+
+/* Busca no topo de listagens (contas B2B) */
+.search {
+  margin-top: 0.75rem;
+  max-width: 340px;
+}

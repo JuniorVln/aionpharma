@@ -14,6 +14,7 @@ export default function Layout() {
         <nav className="nav">
           <NavLink to="/cupons">Cupons</NavLink>
           <NavLink to="/influencers">Influencers</NavLink>
+          <NavLink to="/b2b">Contas CNPJ</NavLink>
         </nav>
         <div className="sidebar-foot">
           <p className="user-email">{user?.email}</p>

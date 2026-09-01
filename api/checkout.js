@@ -1,12 +1,13 @@
 /* ================================================================
    POST /api/checkout
+   0. Reconhece a sessão B2B (Bearer) e revalida os preços no servidor
    1. Valida cupom (se houver) e aplica desconto nos itens
    2. Cria o pedido no Tiny (situação "aberto")
    3. Cria a preferência de pagamento no Mercado Pago
    4. Guarda vínculo pedido↔cupom para o webhook registrar o uso
    ================================================================ */
 
-import { incluirPedido, montarPedido } from './_lib/tiny.js';
+import { incluirPedido, montarPedido, mapaDePrecos } from './_lib/tiny.js';
 import { criarPreferencia } from './_lib/mercadopago.js';
 import {
   buscarCupomValido,
@@ -14,6 +15,14 @@ import {
   aplicarDescontoNosItens,
   salvarCheckoutCupom,
 } from './_lib/cupons.js';
+import {
+  contaDaRequisicao,
+  idListaPrecoB2C,
+  idListaPrecoDoNivel,
+  rotuloDoNivel,
+  formatarCnpj,
+} from './_lib/b2b.js';
+import { getSupabaseAdmin } from './_lib/supabase.js';
 
 async function readJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -21,6 +30,43 @@ async function readJson(req) {
   for await (const c of req) chunks.push(c);
   const raw = Buffer.concat(chunks).toString('utf8');
   return raw ? JSON.parse(raw) : {};
+}
+
+/**
+ * Recarrega o preço de cada item na lista correta (Cliente Final,
+ * Lojista ou Distribuição). O carrinho vem do localStorage, então o
+ * preço enviado pelo navegador é só uma sugestão.
+ * Se o Tiny não responder: pedido B2B falha (preço de custo não pode
+ * sair no chute); B2C segue com o preço enviado, como antes.
+ */
+async function revalidarPrecos(itens, { idListaPreco, exigir }) {
+  let mapa;
+  try {
+    mapa = await mapaDePrecos({ idListaPreco });
+  } catch (err) {
+    if (exigir) {
+      const e = new Error(`Não foi possível confirmar os preços agora: ${err.message}`);
+      e.statusCode = 503;
+      throw e;
+    }
+    return { itens, revalidado: false };
+  }
+
+  const revalidados = itens.map((item) => {
+    const chaveSku = item.sku ? `sku:${String(item.sku).toUpperCase()}` : '';
+    const info = mapa.get(String(item.id)) || (chaveSku ? mapa.get(chaveSku) : null);
+    if (!info || !(info.preco > 0)) {
+      if (exigir) {
+        const e = new Error(`Produto indisponível na tabela de preço: ${item.name || item.id}.`);
+        e.statusCode = 400;
+        throw e;
+      }
+      return item;
+    }
+    return { ...item, sku: item.sku || info.sku, price: info.preco };
+  });
+
+  return { itens: revalidados, revalidado: true };
 }
 
 export default async function handler(req, res) {
@@ -36,14 +82,40 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Pedido inválido: informe cliente e itens.' });
     }
 
+    // Sessão B2B (Bearer): define a tabela de preço e trava o pedido no
+    // CNPJ da conta — não no que veio digitado no formulário.
+    const conta = await contaDaRequisicao(req);
+    const idListaPreco = conta ? idListaPrecoDoNivel(conta.nivel) : idListaPrecoB2C();
+
+    if (conta && cupomCodigo) {
+      return res.status(400).json({
+        error: 'Cupom de desconto não vale para pedidos com preço de lojista.',
+      });
+    }
+
+    const { itens: itensConferidos } = await revalidarPrecos(itens, {
+      idListaPreco,
+      exigir: Boolean(conta),
+    });
+
+    const clienteFinal = conta
+      ? {
+          ...cliente,
+          tipoPessoa: 'J',
+          cpfCnpj: formatarCnpj(conta.cnpj),
+          nome: cliente.nome || conta.razao_social,
+          email: cliente.email || conta.email,
+        }
+      : cliente;
+
     const valorFrete = frete && Number(frete.price) > 0 ? Number(frete.price) : 0;
-    const subtotalOriginal = itens.reduce(
+    const subtotalOriginal = itensConferidos.reduce(
       (s, it) => s + Number(it.price) * Number(it.qty),
       0
     );
 
     let cupomInfo = null;
-    let itensFinais = itens;
+    let itensFinais = itensConferidos;
     let valorDesconto = 0;
     let obsCupom = '';
 
@@ -55,16 +127,21 @@ export default async function handler(req, res) {
       cupomInfo = result.coupon;
       const calc = calcularDesconto(subtotalOriginal, cupomInfo.desconto_percent);
       valorDesconto = calc.valorDesconto;
-      itensFinais = aplicarDescontoNosItens(itens, cupomInfo.desconto_percent);
+      itensFinais = aplicarDescontoNosItens(itensConferidos, cupomInfo.desconto_percent);
       obsCupom = `Cupom ${cupomInfo.codigo} (${cupomInfo.desconto_percent}%): -R$ ${valorDesconto.toFixed(2)}.`;
     }
 
+    const obsB2B = conta
+      ? `Pedido B2B — ${conta.razao_social} (${formatarCnpj(conta.cnpj)}), tabela ${rotuloDoNivel(conta.nivel)}.`
+      : '';
+
     const pedido = montarPedido({
-      cliente,
+      cliente: clienteFinal,
       itens: itensFinais,
       frete,
       observacoes: [
         'Pedido originado pela loja online (aguardando pagamento).',
+        obsB2B,
         obsCupom,
       ]
         .filter(Boolean)
@@ -72,6 +149,25 @@ export default async function handler(req, res) {
       situacao: 'aberto',
     });
     const { id: pedidoId, numero } = await incluirPedido(pedido);
+
+    if (conta) {
+      try {
+        await getSupabaseAdmin()
+          .from('b2b_orders')
+          .insert({
+            account_id: conta.id,
+            pedido_id: String(pedidoId),
+            pedido_numero: numero ? String(numero) : null,
+            nivel: conta.nivel,
+            id_lista_preco: String(idListaPreco),
+            valor_itens: Math.round(subtotalOriginal * 100) / 100,
+            valor_frete: valorFrete,
+          });
+      } catch (b2bErr) {
+        // Pedido já existe no Tiny — o rastro é secundário, não bloqueia.
+        console.error('[/api/checkout] b2b_orders:', b2bErr.message);
+      }
+    }
 
     const preferencia = await criarPreferencia({
       externalReference: String(pedidoId),
@@ -82,7 +178,9 @@ export default async function handler(req, res) {
         picture_url: it.image || undefined,
       })),
       shipmentCost: valorFrete,
-      payer: cliente.email ? { name: cliente.nome, email: cliente.email } : undefined,
+      payer: clienteFinal.email
+        ? { name: clienteFinal.nome, email: clienteFinal.email }
+        : undefined,
     });
 
     if (cupomInfo) {
@@ -92,7 +190,7 @@ export default async function handler(req, res) {
           pedidoNumero: numero,
           couponId: cupomInfo.id,
           codigo: cupomInfo.codigo,
-          emailCliente: cliente.email,
+          emailCliente: clienteFinal.email,
           valorPedido: Math.round((subtotalOriginal - valorDesconto + valorFrete) * 100) / 100,
           valorDesconto,
         });
@@ -111,6 +209,8 @@ export default async function handler(req, res) {
       preferenceId: preferencia.id,
       paymentUrl,
       publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || null,
+      itens: itensFinais.map((it) => ({ id: it.id, sku: it.sku, price: it.price, qty: it.qty })),
+      b2b: conta ? { nivel: conta.nivel, nivelLabel: rotuloDoNivel(conta.nivel) } : null,
       cupom: cupomInfo
         ? {
             codigo: cupomInfo.codigo,
@@ -120,6 +220,12 @@ export default async function handler(req, res) {
         : null,
     });
   } catch (err) {
+    if (err.statusCode) {
+      // Erro de regra (preço não confirmado, item fora da tabela) — a
+      // mensagem é para o cliente ler, não é falha de integração.
+      console.error('[/api/checkout]', err.statusCode, err.message);
+      return res.status(err.statusCode).json({ error: err.message });
+    }
     console.error('[/api/checkout]', err.message);
     return res.status(502).json({ error: 'Falha ao processar o checkout', detail: err.message });
   }

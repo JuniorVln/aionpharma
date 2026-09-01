@@ -1,0 +1,117 @@
+/* ================================================================
+   POST /api/b2b/cadastro — abre conta de compra com CNPJ
+   Fluxo automático: CNPJ com dígito válido (e existente, quando a
+   consulta pública responde) já entra no preço Lojista. O painel
+   /admin promove para Distribuição ou desativa a conta.
+   ================================================================ */
+
+import { getSupabaseAdmin } from '../_lib/supabase.js';
+import {
+  assinarToken,
+  consultarCnpj,
+  contaPublica,
+  hashSenha,
+  normalizarCnpj,
+  validarCnpj,
+  CAMPOS_PUBLICOS,
+} from '../_lib/b2b.js';
+
+async function readJson(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+  const chunks = [];
+  for await (const c of req) chunks.push(c);
+  const raw = Buffer.concat(chunks).toString('utf8');
+  return raw ? JSON.parse(raw) : {};
+}
+
+const emailValido = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v || '').trim());
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
+
+  try {
+    const body = await readJson(req);
+    const cnpj = normalizarCnpj(body.cnpj);
+    const email = String(body.email || '').trim().toLowerCase();
+    const senha = String(body.senha || '');
+    const razaoSocialInformada = String(body.razaoSocial || '').trim();
+
+    if (!validarCnpj(cnpj)) {
+      return res.status(400).json({ error: 'CNPJ inválido. Confira os números e tente de novo.' });
+    }
+    if (!emailValido(email)) {
+      return res.status(400).json({ error: 'Informe um e-mail válido.' });
+    }
+    if (senha.length < 8) {
+      return res.status(400).json({ error: 'A senha precisa ter pelo menos 8 caracteres.' });
+    }
+
+    // Duas consultas simples em vez de um `.or(...)`: e-mail é texto do
+    // usuário e vírgula/parêntese quebram (ou torcem) o filtro do PostgREST.
+    const sb = getSupabaseAdmin();
+    const [porCnpj, porEmail] = await Promise.all([
+      sb.from('b2b_accounts').select('id').eq('cnpj', cnpj).maybeSingle(),
+      sb.from('b2b_accounts').select('id').eq('email', email).maybeSingle(),
+    ]);
+    if (porCnpj.error) throw new Error(`Supabase b2b_accounts: ${porCnpj.error.message}`);
+    if (porEmail.error) throw new Error(`Supabase b2b_accounts: ${porEmail.error.message}`);
+    if (porCnpj.data || porEmail.data) {
+      const qual = porCnpj.data ? 'CNPJ' : 'e-mail';
+      return res.status(409).json({ error: `Já existe uma conta com esse ${qual}. Faça login.` });
+    }
+
+    // Consulta pública: enriquece a razão social e barra CNPJ inexistente.
+    // Se a API estiver fora, segue com o que o lojista digitou.
+    const receita = await consultarCnpj(cnpj);
+    if (receita.encontrado === false) {
+      return res.status(400).json({ error: 'CNPJ não encontrado na base da Receita.' });
+    }
+    const razaoSocial = receita.razaoSocial || razaoSocialInformada;
+    if (!razaoSocial) {
+      return res.status(400).json({ error: 'Informe a razão social da empresa.' });
+    }
+
+    const { data: conta, error } = await sb
+      .from('b2b_accounts')
+      .insert({
+        cnpj,
+        razao_social: razaoSocial,
+        nome_fantasia: receita.nomeFantasia || String(body.nomeFantasia || '').trim() || null,
+        email,
+        telefone: String(body.telefone || '').trim() || null,
+        contato_nome: String(body.contatoNome || '').trim() || null,
+        senha_hash: hashSenha(senha),
+        nivel: 'lojista',
+        ativo: true,
+        cep: String(body.cep || '').replace(/\D/g, '') || null,
+        endereco: String(body.endereco || '').trim() || null,
+        numero: String(body.numero || '').trim() || null,
+        complemento: String(body.complemento || '').trim() || null,
+        bairro: String(body.bairro || '').trim() || null,
+        cidade: String(body.cidade || '').trim() || receita.municipio || null,
+        uf: (String(body.uf || '').trim() || receita.uf || '').toUpperCase().slice(0, 2) || null,
+        cnpj_situacao: receita.situacao || null,
+        cnpj_verificado: Boolean(receita.encontrado),
+        ultimo_login: new Date().toISOString(),
+      })
+      .select(CAMPOS_PUBLICOS)
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({ error: 'Já existe uma conta com esse CNPJ ou e-mail. Faça login.' });
+      }
+      throw new Error(`Supabase b2b_accounts: ${error.message}`);
+    }
+
+    const token = assinarToken({ sub: conta.id, cnpj: conta.cnpj, nivel: conta.nivel });
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(201).json({ token, conta: contaPublica(conta) });
+  } catch (err) {
+    console.error('[/api/b2b/cadastro]', err.message);
+    return res.status(502).json({ error: 'Falha ao criar a conta', detail: err.message });
+  }
+}

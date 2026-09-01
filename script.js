@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollBehavior();
   initRevealAnimations();
   initMobileNav();
+  initB2B();
   initCatalog();
   initProductPage();
 });
@@ -146,6 +147,29 @@ function invalidarFrete() {
   if (box) { box.innerHTML = ''; box._opcoes = null; }
 }
 
+/**
+ * Alinha o carrinho com os preços que o servidor confirmou no checkout.
+ * Com cupom os itens voltam já descontados — aí o carrinho não mexe,
+ * senão o desconto entraria duas vezes.
+ */
+function sincronizarPrecosDoCarrinho(itensConferidos) {
+  if (appliedCoupon) return;
+  let mudou = false;
+  for (const conferido of itensConferidos) {
+    const item = cart.find((c) => String(c.id) === String(conferido.id));
+    if (!item || !(Number(conferido.price) > 0)) continue;
+    if (Number(item.price) !== Number(conferido.price)) {
+      item.price = Number(conferido.price);
+      mudou = true;
+    }
+  }
+  if (mudou) {
+    saveCart();
+    renderCartUI();
+    renderCheckoutResumo();
+  }
+}
+
 function getCartTotal() {
   return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
@@ -251,6 +275,25 @@ function renderCartUI() {
     cupomBtn.textContent = 'Aplicar';
   }
 
+  // Lojista logado: cupom sai de cena (a tabela dele já é o desconto)
+  // e o carrinho mostra qual tabela está valendo.
+  const blocoCupom = document.getElementById('cart-cupom');
+  if (blocoCupom) blocoCupom.style.display = b2bLogado() ? 'none' : '';
+  const footerBox = document.getElementById('cart-footer');
+  let avisoB2B = document.getElementById('cart-b2b-aviso');
+  if (b2bLogado() && footerBox) {
+    if (!avisoB2B) {
+      avisoB2B = document.createElement('p');
+      avisoB2B.id = 'cart-b2b-aviso';
+      avisoB2B.className = 'cart-b2b-aviso';
+      footerBox.prepend(avisoB2B);
+    }
+    const conta = b2bSession.conta || {};
+    avisoB2B.innerHTML = `🏷️ Tabela <strong>${conta.nivelLabel || 'Lojista'}</strong> aplicada · pedido no CNPJ ${conta.cnpj || ''}`;
+  } else if (avisoB2B) {
+    avisoB2B.remove();
+  }
+
   const freteLine = document.getElementById('cart-frete-line');
   const freteDisp = document.getElementById('cart-frete-display');
   if (freteLine && freteDisp) {
@@ -264,9 +307,313 @@ function renderCartUI() {
   if (totalEl) totalEl.textContent = formatPrice(Math.max(0, subtotal - desconto) + freteVal);
 }
 
+/* ================================================================
+   Área do Lojista (compra com CNPJ)
+   A sessão fica no localStorage e vai como Bearer em /api/produtos e
+   /api/checkout — é o servidor que decide a tabela de preço (Lojista
+   ou Distribuição). O front só mostra o que voltou.
+   ================================================================ */
+
+const B2B_KEY = 'aion_b2b';
+let b2bSession = null;
+
+function b2bCarregarSessao() {
+  try {
+    b2bSession = JSON.parse(localStorage.getItem(B2B_KEY) || 'null');
+  } catch {
+    b2bSession = null;
+  }
+  return b2bSession;
+}
+
+function b2bSalvarSessao(sessao) {
+  b2bSession = sessao;
+  if (sessao) localStorage.setItem(B2B_KEY, JSON.stringify(sessao));
+  else localStorage.removeItem(B2B_KEY);
+}
+
+function b2bLogado() {
+  return Boolean(b2bSession?.token);
+}
+
+/** Headers com a sessão do lojista (vazio para visitante comum). */
+function b2bHeaders(extra = {}) {
+  return b2bLogado() ? { ...extra, Authorization: `Bearer ${b2bSession.token}` } : { ...extra };
+}
+
+/** Sessão expirada/derrubada pelo servidor → limpa e avisa. */
+function b2bSessaoInvalida() {
+  if (!b2bLogado()) return;
+  b2bSalvarSessao(null);
+  b2bAplicarUI();
+  showToast('🔒 Sua sessão de lojista expirou. Entre de novo para ver os preços de revenda.', 5000);
+}
+
+async function b2bApi(path, options = {}) {
+  const r = await fetch(path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...b2bHeaders(),
+      ...(options.headers || {}),
+    },
+  });
+  const data = await r.json().catch(() => ({}));
+  if (r.status === 401 && b2bLogado()) b2bSessaoInvalida();
+  if (!r.ok) throw new Error(data.error || data.detail || `Erro ${r.status}`);
+  return data;
+}
+
+/** Marca visual no header + link do menu enquanto o lojista está logado. */
+function b2bAplicarUI() {
+  const nivel = b2bSession?.conta?.nivelLabel || 'Lojista';
+  document.querySelectorAll('.b2b-chip').forEach((el) => el.remove());
+  document.body.classList.toggle('b2b-ativo', b2bLogado());
+
+  if (b2bLogado()) {
+    const chip = document.createElement('a');
+    chip.href = 'b2b.html';
+    chip.className = 'b2b-chip';
+    chip.title = b2bSession?.conta?.razaoSocial || '';
+    chip.innerHTML = `<span class="b2b-chip-dot"></span>Preço ${nivel}`;
+    document.querySelector('.header-actions')?.prepend(chip);
+  }
+
+  // Link do menu vira "Minha conta" quando logado
+  document.querySelectorAll('a[href="b2b.html"]').forEach((a) => {
+    if (a.classList.contains('b2b-chip')) return;
+    if (a.closest('.footer-links')) return;
+    a.textContent = b2bLogado() ? 'Minha conta' : 'Área do Lojista';
+  });
+
+  renderCartUI();
+}
+
+function initB2B() {
+  b2bCarregarSessao();
+  b2bAplicarUI();
+  if (b2bLogado()) {
+    // Revalida em silêncio: conta desativada ou promovida a Distribuição
+    // precisa refletir no preço já nesta visita.
+    b2bApi('/api/b2b/me')
+      .then((data) => {
+        const nivelAntes = b2bSession?.conta?.nivel;
+        b2bSalvarSessao({ ...b2bSession, conta: data.conta });
+        b2bAplicarUI();
+        if (nivelAntes && data.conta.nivel !== nivelAntes) initCatalog();
+        b2bPreencherPainel();
+      })
+      .catch(() => { /* offline ou sessão caiu — b2bApi já tratou o 401 */ });
+  }
+  b2bRenderizarPagina();
+}
+
+/* ── Página b2b.html ─────────────────────────────────────────── */
+
+function b2bRenderizarPagina() {
+  const painel = document.getElementById('b2b-painel');
+  const acesso = document.getElementById('b2b-acesso');
+  if (!painel || !acesso) return; // não estamos na b2b.html
+
+  painel.hidden = !b2bLogado();
+  acesso.hidden = b2bLogado();
+  if (b2bLogado()) b2bPreencherPainel();
+}
+
+function b2bPreencherPainel() {
+  const conta = b2bSession?.conta;
+  if (!conta || !document.getElementById('b2b-painel')) return;
+
+  const set = (id, valor) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = valor;
+  };
+  set('b2b-painel-razao', conta.razaoSocial || '—');
+  set('b2b-painel-cnpj', `CNPJ ${conta.cnpj}`);
+  set('b2b-painel-nivel', `Tabela ${conta.nivelLabel}`);
+
+  const val = (id, valor) => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = valor || '';
+  };
+  val('b2b-contato', conta.contatoNome);
+  val('b2b-telefone', conta.telefone);
+  val('b2b-cep', conta.endereco?.cep);
+  val('b2b-endereco', conta.endereco?.logradouro);
+  val('b2b-numero', conta.endereco?.numero);
+  val('b2b-complemento', conta.endereco?.complemento);
+  val('b2b-bairro', conta.endereco?.bairro);
+  val('b2b-cidade', conta.endereco?.cidade);
+  val('b2b-uf', conta.endereco?.uf);
+}
+
+function b2bMostrarAba(aba) {
+  const ehLogin = aba === 'login';
+  document.getElementById('b2b-form-login').hidden = !ehLogin;
+  document.getElementById('b2b-form-cadastro').hidden = ehLogin;
+  document.getElementById('b2b-tab-login').classList.toggle('active', ehLogin);
+  document.getElementById('b2b-tab-cadastro').classList.toggle('active', !ehLogin);
+}
+
+/** Máscara de CNPJ (aceita o formato alfanumérico novo). */
+function onCnpjInput(el) {
+  const v = el.value.toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 14);
+  let out = v;
+  if (v.length > 12) out = `${v.slice(0, 2)}.${v.slice(2, 5)}.${v.slice(5, 8)}/${v.slice(8, 12)}-${v.slice(12)}`;
+  else if (v.length > 8) out = `${v.slice(0, 2)}.${v.slice(2, 5)}.${v.slice(5, 8)}/${v.slice(8)}`;
+  else if (v.length > 5) out = `${v.slice(0, 2)}.${v.slice(2, 5)}.${v.slice(5)}`;
+  else if (v.length > 2) out = `${v.slice(0, 2)}.${v.slice(2)}`;
+  el.value = out;
+
+  const hint = document.getElementById('b2b-cad-razao-hint');
+  if (hint) {
+    hint.textContent = v.length === 14
+      ? 'Confirmamos a razão social na Receita ao criar a conta.'
+      : '';
+  }
+}
+
+/** Máscara de CEP + ViaCEP preenchendo os campos do formulário de dados. */
+function onCheckoutCepGenerico(el) {
+  let v = el.value.replace(/\D/g, '').slice(0, 8);
+  if (v.length > 5) v = `${v.slice(0, 5)}-${v.slice(5)}`;
+  el.value = v;
+  const limpo = v.replace(/\D/g, '');
+  if (limpo.length !== 8) return;
+
+  fetch(`https://viacep.com.br/ws/${limpo}/json/`)
+    .then((r) => r.json())
+    .then((d) => {
+      if (d.erro) return;
+      const set = (id, valor) => {
+        const campo = document.getElementById(id);
+        if (campo && valor && !campo.value) campo.value = valor;
+      };
+      set('b2b-endereco', d.logradouro);
+      set('b2b-bairro', d.bairro);
+      set('b2b-cidade', d.localidade);
+      set('b2b-uf', d.uf);
+    })
+    .catch(() => { /* silencioso — dá para preencher à mão */ });
+}
+
+async function b2bLogin(event) {
+  event.preventDefault();
+  const btn = document.getElementById('b2b-login-submit');
+  const f = Object.fromEntries(new FormData(event.target).entries());
+  if (btn) { btn.disabled = true; btn.textContent = 'Entrando…'; }
+  try {
+    const data = await b2bApi('/api/b2b/login', {
+      method: 'POST',
+      body: JSON.stringify({ identificador: f.identificador, senha: f.senha }),
+    });
+    b2bSalvarSessao({ token: data.token, conta: data.conta });
+    b2bAplicarUI();
+    b2bRenderizarPagina();
+    showToast(`✅ Bem-vindo! Preço ${data.conta.nivelLabel} ativo no catálogo.`, 4000);
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 4000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+  }
+}
+
+async function b2bCadastrar(event) {
+  event.preventDefault();
+  const btn = document.getElementById('b2b-cad-submit');
+  const f = Object.fromEntries(new FormData(event.target).entries());
+  if (btn) { btn.disabled = true; btn.textContent = 'Criando conta…'; }
+  try {
+    const data = await b2bApi('/api/b2b/cadastro', {
+      method: 'POST',
+      body: JSON.stringify(f),
+    });
+    b2bSalvarSessao({ token: data.token, conta: data.conta });
+    b2bAplicarUI();
+    b2bRenderizarPagina();
+    showToast(`🎉 Conta criada! Preço ${data.conta.nivelLabel} já valendo.`, 4000);
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 5000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Criar conta e ver preços'; }
+  }
+}
+
+async function b2bSalvarDados(event) {
+  event.preventDefault();
+  const btn = document.getElementById('b2b-dados-submit');
+  const f = Object.fromEntries(new FormData(event.target).entries());
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+  try {
+    const data = await b2bApi('/api/b2b/me', { method: 'PATCH', body: JSON.stringify(f) });
+    b2bSalvarSessao({ ...b2bSession, conta: data.conta });
+    showToast('✅ Dados atualizados.');
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 4000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Salvar dados'; }
+  }
+}
+
+/**
+ * Checkout do lojista: nasce como Pessoa Jurídica com o CNPJ da conta
+ * (o servidor ignora o que vier diferente disso) e já traz o endereço
+ * padrão, que continua editável pedido a pedido.
+ */
+function b2bPreencherCheckout() {
+  const form = document.getElementById('checkout-form');
+  if (!form) return;
+  const campo = (nome) => form.elements[nome];
+
+  const tipo = campo('tipoPessoa');
+  const doc = campo('cpfCnpj');
+
+  if (!b2bLogado()) {
+    if (tipo) tipo.disabled = false;
+    if (doc) { doc.readOnly = false; doc.title = ''; }
+    return;
+  }
+
+  const conta = b2bSession.conta || {};
+  if (tipo) { tipo.value = 'J'; tipo.disabled = true; onTipoPessoa(tipo); }
+  if (doc) {
+    doc.value = conta.cnpj || '';
+    doc.readOnly = true;
+    doc.title = 'Pedido emitido no CNPJ da conta de lojista';
+  }
+
+  const preencher = (nome, valor) => {
+    const el = campo(nome);
+    if (el && !el.value && valor) el.value = valor;
+  };
+  preencher('nome', conta.razaoSocial);
+  preencher('email', conta.email);
+  preencher('telefone', conta.telefone);
+  const end = conta.endereco || {};
+  preencher('cep', end.cep);
+  preencher('endereco', end.logradouro);
+  preencher('numero', end.numero);
+  preencher('complemento', end.complemento);
+  preencher('bairro', end.bairro);
+  preencher('cidade', end.cidade);
+  preencher('uf', end.uf);
+}
+
+function b2bLogout() {
+  b2bSalvarSessao(null);
+  b2bAplicarUI();
+  b2bRenderizarPagina();
+  initCatalog(); // volta a vitrine para o preço de consumidor
+  showToast('👋 Você saiu da conta de lojista.');
+}
+
 /* ── Cupom de desconto ───────────────────────────────────────── */
 
 async function aplicarCupom() {
+  if (b2bLogado()) {
+    showToast('🏷️ Cupom não vale junto com preço de lojista — sua tabela já está aplicada.', 4500);
+    return;
+  }
   const input = document.getElementById('cart-cupom-input');
   const msg = document.getElementById('cart-cupom-msg');
   const btn = document.getElementById('cart-cupom-btn');
@@ -433,6 +780,7 @@ function openCheckout() {
   const cepCart = document.getElementById('cart-cep');
   const cepForm = document.getElementById('checkout-cep');
   if (cepForm && cepCart && cepCart.value) { cepForm.value = cepCart.value; onCheckoutCep(cepForm); }
+  b2bPreencherCheckout();
   renderCheckoutResumo();
   document.getElementById('checkout-overlay')?.classList.add('open');
   document.getElementById('checkout-panel')?.classList.add('open');
@@ -496,7 +844,10 @@ async function enviarCheckout(event) {
 
   const cliente = {
     nome: f.nome, email: f.email, telefone: f.telefone,
-    tipoPessoa: f.tipoPessoa, cpfCnpj: f.cpfCnpj,
+    // O select fica travado em "J" na área do lojista (campo desabilitado
+    // não entra no FormData), e o servidor confere pelo CNPJ da conta.
+    tipoPessoa: f.tipoPessoa || (b2bLogado() ? 'J' : 'F'),
+    cpfCnpj: f.cpfCnpj,
     cep: f.cep, endereco: f.endereco, numero: f.numero,
     complemento: f.complemento || '', bairro: f.bairro,
     cidade: f.cidade, uf: (f.uf || '').toUpperCase(),
@@ -506,16 +857,21 @@ async function enviarCheckout(event) {
   try {
     const r = await fetch('/api/checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: b2bHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         cliente,
         itens: cart,
         frete: selectedFrete,
-        cupom: appliedCoupon?.codigo || null,
+        cupom: b2bLogado() ? null : appliedCoupon?.codigo || null,
       }),
     });
     const data = await r.json();
+    if (r.status === 401) b2bSessaoInvalida();
     if (!r.ok || !data.preferenceId) throw new Error(data.detail || data.error || 'Falha no checkout');
+
+    // O servidor reconfere o preço na tabela; se mudou (tabela nova na
+    // Olist, carrinho velho), o carrinho acompanha antes do pagamento.
+    if (Array.isArray(data.itens)) sincronizarPrecosDoCarrinho(data.itens);
 
     // sem public key configurada → cai para o checkout externo (init_point)
     if (!data.publicKey) {
@@ -634,8 +990,13 @@ function initCatalog() {
   const grid = catalogGrid || homeGrid;
   grid.innerHTML = catalogSkeleton(catalogGrid ? 6 : 4);
 
-  fetch('/api/produtos')
-    .then((r) => r.json())
+  // Com sessão de lojista, o servidor devolve a tabela dele (Lojista
+  // ou Distribuição) em vez do preço de consumidor final.
+  fetch('/api/produtos', { headers: b2bHeaders() })
+    .then((r) => {
+      if (r.status === 401) b2bSessaoInvalida();
+      return r.json();
+    })
     .then((data) => {
       CATALOG = (data.produtos || []).map(withTags);
       if (homeGrid) renderProducts(homeGrid, CATALOG.slice(0, 4));
@@ -815,8 +1176,11 @@ function initProductPage() {
 
   root.innerHTML = '<div class="product-page-loading">Carregando produto…</div>';
 
-  fetch('/api/produtos')
-    .then((r) => r.json())
+  fetch('/api/produtos', { headers: b2bHeaders() })
+    .then((r) => {
+      if (r.status === 401) b2bSessaoInvalida();
+      return r.json();
+    })
     .then((data) => {
       const p = (data.produtos || []).map(withTags).find((item) => item.id === id);
       if (!p) {

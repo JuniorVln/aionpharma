@@ -7,6 +7,12 @@
    ================================================================ */
 
 import { pesquisarProdutos, obterProduto, extrairImagem } from './_lib/tiny.js';
+import {
+  contaDaRequisicao,
+  idListaPrecoB2C,
+  idListaPrecoDoNivel,
+  rotuloDoNivel,
+} from './_lib/b2b.js';
 
 const PLACEHOLDER = '/assets/images/placeholder-produto.svg';
 
@@ -67,9 +73,11 @@ export default async function handler(req, res) {
 
   try {
     const busca = (req.query?.busca || '').toString();
-    // 321 = lista "Cliente Final" na conta Aion. Sem isso a vitrine
-    // ignora as tabelas da Olist e mostra só o preço de cadastro.
-    const idListaPreco = process.env.TINY_ID_LISTA_PRECO || '321';
+    // Visitante comum vê a lista "Cliente Final" (321 na conta Aion).
+    // Lojista logado (Bearer do /api/b2b/login) vê a tabela do nível
+    // dele — Lojista (103) ou Distribuição (102).
+    const conta = await contaDaRequisicao(req);
+    const idListaPreco = conta ? idListaPrecoDoNivel(conta.nivel) : idListaPrecoB2C();
     const lista = await pesquisarProdutos({ pesquisa: busca, idListaPreco });
     const visiveis = lista
       .filter((p) => !isOculto(p))
@@ -91,7 +99,19 @@ export default async function handler(req, res) {
       }
     });
 
+    // Preço B2B NUNCA pode ir para o cache compartilhado da Vercel:
+    // um visitante seguinte receberia a tabela de custo.
+    if (conta) {
+      res.setHeader('Cache-Control', 'private, no-store');
+      res.setHeader('Vary', 'Authorization');
+      return res.status(200).json({
+        produtos: detalhados,
+        b2b: { nivel: conta.nivel, nivelLabel: rotuloDoNivel(conta.nivel) },
+      });
+    }
+
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    res.setHeader('Vary', 'Authorization');
     return res.status(200).json({ produtos: detalhados });
   } catch (err) {
     console.error('[/api/produtos]', err.message);

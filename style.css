@@ -3236,3 +3236,74 @@ h1, h2, h3, h4, h5, h6,
   text-transform: uppercase; color: var(--clr-text-soft, #6b7c77);
   background: var(--clr-bg); border-radius: 999px; padding: 3px 10px; margin-top: var(--space-2);
 }
+
+/* ================================================================
+   Área do Lojista (compra com CNPJ)
+   ================================================================ */
+.b2b-grid {
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: var(--space-6); align-items: start;
+}
+.b2b-card {
+  background: var(--clr-white); border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg); padding: var(--space-6);
+  box-shadow: 0 2px 14px rgba(5, 18, 49, .05);
+}
+.b2b-card + .b2b-card { margin-top: var(--space-6); }
+.b2b-card h2 { font-size: 1.5rem; margin: var(--space-2) 0 2px; }
+.b2b-card h3 { font-size: 1.125rem; margin-bottom: var(--space-2); }
+.b2b-muted { color: var(--clr-text-muted); font-size: .9rem; }
+.b2b-hint { font-size: .75rem; color: var(--clr-accent-deep); min-height: 1em; }
+.b2b-ajuda { margin-top: calc(var(--space-2) * -1); }
+.b2b-ajuda a { color: var(--clr-accent-deep); font-weight: 600; }
+
+/* Abas Entrar / Criar conta */
+.b2b-tabs {
+  display: flex; gap: 4px; background: var(--clr-bg); padding: 4px;
+  border-radius: 999px; margin-bottom: var(--space-5);
+}
+.b2b-tab {
+  flex: 1; border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-weight: 600; font-size: .9rem; color: var(--clr-text-muted);
+  padding: .55rem .75rem; border-radius: 999px; transition: all .18s ease;
+}
+.b2b-tab.active { background: var(--clr-white); color: var(--clr-primary); box-shadow: 0 1px 6px rgba(5, 18, 49, .1); }
+
+/* Painel da conta logada */
+.b2b-conta-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); }
+.b2b-badge {
+  display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--clr-white); background: var(--clr-accent);
+  border-radius: 999px; padding: 3px 12px;
+}
+.b2b-acoes { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+.b2b-painel .b2b-card { margin-bottom: var(--space-6); }
+
+.b2b-lista { list-style: none; padding: 0; margin: 0 0 var(--space-4); display: grid; gap: var(--space-3); }
+.b2b-lista li { position: relative; padding-left: 1.5rem; font-size: .925rem; color: var(--clr-text); }
+.b2b-lista li::before { content: '✓'; position: absolute; left: 0; color: var(--clr-accent); font-weight: 700; }
+.b2b-vantagens { background: var(--clr-cream); }
+
+/* Selo no header enquanto a sessão de lojista está ativa */
+.b2b-chip {
+  display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700;
+  color: var(--clr-accent-deep); background: var(--clr-primary-pale);
+  border: 1px solid var(--clr-primary-pale); border-radius: 999px; padding: .35rem .7rem;
+  white-space: nowrap;
+}
+.b2b-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--clr-accent); }
+.b2b-chip:hover { border-color: var(--clr-accent); }
+
+/* Aviso dentro do carrinho */
+.cart-b2b-aviso {
+  font-size: .8rem; color: var(--clr-accent-deep); background: var(--clr-primary-pale);
+  border-radius: var(--radius-sm); padding: .5rem .7rem; margin: 0 0 var(--space-3);
+}
+
+@media (max-width: 900px) {
+  .b2b-grid { grid-template-columns: 1fr; }
+  .b2b-conta-head { flex-direction: column; }
+}
+@media (max-width: 600px) {
+  .b2b-chip { display: none; }
+}
