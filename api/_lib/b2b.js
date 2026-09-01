@@ -63,6 +63,42 @@ export function validarCnpj(valor) {
   return dv(12) === val(12) && dv(13) === val(13);
 }
 
+/* O Cloudflare da BrasilAPI devolve 403 (code 1010) para requisição sem
+   User-Agent — era por isso que a consulta falhava em produção e todo
+   CNPJ caía no fallback permissivo. A segunda fonte cobre indisponibilidade. */
+const CNPJ_USER_AGENT = 'aionpharma-b2b/1.0 (+https://www.aionpharma.ind.br)';
+
+const FONTES_CNPJ = [
+  {
+    nome: 'brasilapi',
+    url: (n) => `https://brasilapi.com.br/api/cnpj/v1/${n}`,
+    mapear: (d) =>
+      d && d.cnpj
+        ? {
+            razaoSocial: d.razao_social || '',
+            nomeFantasia: d.nome_fantasia || '',
+            situacao: d.descricao_situacao_cadastral || '',
+            uf: d.uf || '',
+            municipio: d.municipio || '',
+          }
+        : null,
+  },
+  {
+    nome: 'minhareceita',
+    url: (n) => `https://minhareceita.org/${n}`,
+    mapear: (d) =>
+      d && d.cnpj
+        ? {
+            razaoSocial: d.razao_social || '',
+            nomeFantasia: d.nome_fantasia || '',
+            situacao: d.descricao_situacao_cadastral || '',
+            uf: d.uf || '',
+            municipio: d.municipio || '',
+          }
+        : null,
+  },
+];
+
 /**
  * Consulta pública de CNPJ (BrasilAPI). É best-effort: serve para
  * puxar a razão social e barrar CNPJ que só é válido no dígito. Se a
@@ -71,27 +107,35 @@ export function validarCnpj(valor) {
  */
 export async function consultarCnpj(cnpj) {
   const numero = normalizarCnpj(cnpj);
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 4000);
-  try {
-    const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${numero}`, { signal: ctrl.signal });
-    if (r.status === 404) return { ok: false, encontrado: false };
-    if (!r.ok) return { ok: false, indisponivel: true };
-    const d = await r.json();
-    return {
-      ok: true,
-      encontrado: true,
-      razaoSocial: d.razao_social || '',
-      nomeFantasia: d.nome_fantasia || '',
-      situacao: d.descricao_situacao_cadastral || '',
-      uf: d.uf || '',
-      municipio: d.municipio || '',
-    };
-  } catch {
-    return { ok: false, indisponivel: true };
-  } finally {
-    clearTimeout(timer);
+  const motivos = [];
+
+  for (const fonte of FONTES_CNPJ) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    try {
+      const r = await fetch(fonte.url(numero), {
+        signal: ctrl.signal,
+        headers: { accept: 'application/json', 'user-agent': CNPJ_USER_AGENT },
+      });
+      if (r.status === 404) return { ok: false, encontrado: false, fonte: fonte.nome };
+      if (!r.ok) {
+        motivos.push(`${fonte.nome}:${r.status}`);
+        continue;
+      }
+      const dados = fonte.mapear(await r.json());
+      if (!dados) {
+        motivos.push(`${fonte.nome}:resposta-inesperada`);
+        continue;
+      }
+      return { ok: true, encontrado: true, fonte: fonte.nome, ...dados };
+    } catch (e) {
+      motivos.push(`${fonte.nome}:${e?.name === 'AbortError' ? 'timeout' : 'falha'}`);
+    } finally {
+      clearTimeout(timer);
+    }
   }
+
+  return { ok: false, indisponivel: true, motivo: motivos.join(' ') || 'sem fonte' };
 }
 
 /* ── Senha (scrypt, sem dependência externa) ───────────────────── */

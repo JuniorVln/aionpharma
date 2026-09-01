@@ -93,7 +93,7 @@ export default async function handler(req, res) {
         bairro: String(body.bairro || '').trim() || null,
         cidade: String(body.cidade || '').trim() || receita.municipio || null,
         uf: (String(body.uf || '').trim() || receita.uf || '').toUpperCase().slice(0, 2) || null,
-        cnpj_situacao: receita.situacao || null,
+        cnpj_situacao: receita.situacao || (receita.indisponivel ? `nao verificado (${receita.motivo})` : null),
         cnpj_verificado: Boolean(receita.encontrado),
         ultimo_login: new Date().toISOString(),
       })
