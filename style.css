@@ -3213,6 +3213,9 @@ h1, h2, h3, h4, h5, h6,
 .contact-channel .ch-title { font-weight: 700; color: var(--clr-dark); margin-bottom: 2px; }
 .contact-channel .ch-desc { font-size: .9rem; color: var(--clr-text-muted); }
 .contact-form { display: flex; flex-direction: column; gap: var(--space-4); }
+/* O atributo hidden perde para qualquer display declarado — sem esta regra os formularios
+   de login e cadastro da Area do Lojista apareciam os dois ao mesmo tempo. */
+[hidden] { display: none !important; }
 .contact-form .field { display: flex; flex-direction: column; gap: 6px; }
 .contact-form label { font-size: .875rem; font-weight: 600; color: var(--clr-dark); }
 .contact-form input,
