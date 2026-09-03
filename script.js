@@ -522,20 +522,20 @@ async function b2bCadastrar(event) {
   event.preventDefault();
   const btn = document.getElementById('b2b-cad-submit');
   const f = Object.fromEntries(new FormData(event.target).entries());
-  if (btn) { btn.disabled = true; btn.textContent = 'Criando conta…'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
   try {
     const data = await b2bApi('/api/b2b/cadastro', {
       method: 'POST',
       body: JSON.stringify(f),
     });
-    b2bSalvarSessao({ token: data.token, conta: data.conta });
-    b2bAplicarUI();
-    b2bRenderizarPagina();
-    showToast(`🎉 Conta criada! Preço ${data.conta.nivelLabel} já valendo.`, 4000);
+    // A conta nasce pendente: sem token, sem sessão e sem preço B2B até
+    // a Aion aprovar no painel.
+    event.target.reset();
+    showToast('🎉 Cadastro enviado! A Aion confere os dados e libera o seu acesso — você recebe um aviso assim que a conta for aprovada.', 7000);
   } catch (err) {
     showToast(`❌ ${err.message}`, 5000);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Criar conta e ver preços'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Enviar cadastro'; }
   }
 }
 

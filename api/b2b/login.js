@@ -76,7 +76,7 @@ export default async function handler(req, res) {
 
     if (!conta.ativo) {
       return res.status(403).json({
-        error: 'Conta desativada. Fale com o comercial da Aion para reativar.',
+        error: 'Conta ainda não liberada. A Aion confere o cadastro e avisa assim que o acesso estiver ativo.',
       });
     }
 

@@ -1,13 +1,13 @@
 /* ================================================================
    POST /api/b2b/cadastro — abre conta de compra com CNPJ
-   Fluxo automático: CNPJ com dígito válido (e existente, quando a
-   consulta pública responde) já entra no preço Lojista. O painel
-   /admin promove para Distribuição ou desativa a conta.
+   Fluxo: CNPJ com dígito válido (e existente, quando a consulta
+   pública responde) cria a conta como PENDENTE. O preço Lojista só
+   passa a valer quando alguém da Aion ativa a conta no /admin, que
+   também promove para Distribuição.
    ================================================================ */
 
 import { getSupabaseAdmin } from '../_lib/supabase.js';
 import {
-  assinarToken,
   consultarCnpj,
   contaPublica,
   hashSenha,
@@ -85,7 +85,9 @@ export default async function handler(req, res) {
         contato_nome: String(body.contatoNome || '').trim() || null,
         senha_hash: hashSenha(senha),
         nivel: 'lojista',
-        ativo: true,
+        // Nasce PENDENTE: o preço de lojista só vale depois que alguém da Aion
+        // aprova a conta no /admin (pedido do Gabriel em 02/09/2026).
+        ativo: false,
         cep: String(body.cep || '').replace(/\D/g, '') || null,
         endereco: String(body.endereco || '').trim() || null,
         numero: String(body.numero || '').trim() || null,
@@ -95,7 +97,6 @@ export default async function handler(req, res) {
         uf: (String(body.uf || '').trim() || receita.uf || '').toUpperCase().slice(0, 2) || null,
         cnpj_situacao: receita.situacao || (receita.indisponivel ? `nao verificado (${receita.motivo})` : null),
         cnpj_verificado: Boolean(receita.encontrado),
-        ultimo_login: new Date().toISOString(),
       })
       .select(CAMPOS_PUBLICOS)
       .single();
@@ -107,9 +108,9 @@ export default async function handler(req, res) {
       throw new Error(`Supabase b2b_accounts: ${error.message}`);
     }
 
-    const token = assinarToken({ sub: conta.id, cnpj: conta.cnpj, nivel: conta.nivel });
+    // Sem token: a conta ainda não vale sessão nem preço B2B.
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(201).json({ token, conta: contaPublica(conta) });
+    return res.status(201).json({ pendente: true, conta: contaPublica(conta) });
   } catch (err) {
     console.error('[/api/b2b/cadastro]', err.message);
     return res.status(502).json({ error: 'Falha ao criar a conta', detail: err.message });
