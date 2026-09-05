@@ -2,14 +2,14 @@
    Lógica de cupons — validação e resgate
    ================================================================ */
 
-import { getSupabaseAdmin } from './supabase.js';
+import { getDb } from './db.js';
 
 /** Busca cupom válido pelo código (maiúsculas). */
 export async function buscarCupomValido(codigo) {
   const code = String(codigo || '').trim().toUpperCase();
   if (!code) return { ok: false, error: 'Informe o código do cupom.' };
 
-  const sb = getSupabaseAdmin();
+  const sb = getDb();
   const { data: coupon, error } = await sb
     .from('coupons')
     .select('*, influencers(id, nome, instagram)')
@@ -87,7 +87,7 @@ export async function registrarResgate({
 }) {
   if (!couponId || !pedidoId) return { skipped: true };
 
-  const sb = getSupabaseAdmin();
+  const sb = getDb();
 
   const { error: insertErr } = await sb.from('coupon_redemptions').insert({
     coupon_id: couponId,
@@ -118,7 +118,7 @@ export async function salvarCheckoutCupom({
   valorPedido,
   valorDesconto,
 }) {
-  const sb = getSupabaseAdmin();
+  const sb = getDb();
   // Usa upsert numa tabela leve; se não existir, cria via insert em redemptions pending
   // Preferimos tabela checkout_coupons
   const { error } = await sb.from('checkout_coupons').upsert(
@@ -137,7 +137,7 @@ export async function salvarCheckoutCupom({
 }
 
 export async function confirmarResgatePorPedido(pedidoId) {
-  const sb = getSupabaseAdmin();
+  const sb = getDb();
   const { data, error } = await sb
     .from('checkout_coupons')
     .select('*')

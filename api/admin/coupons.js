@@ -1,6 +1,7 @@
 /* GET/POST/PATCH /api/admin/coupons */
 
-import { getSupabaseAdmin, requireAdmin } from '../_lib/supabase.js';
+import { getDb } from '../_lib/db.js';
+import { requireAdmin } from '../_lib/auth.js';
 
 async function readJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -14,7 +15,7 @@ export default async function handler(req, res) {
   const user = await requireAdmin(req, res);
   if (!user) return;
 
-  const sb = getSupabaseAdmin();
+  const sb = getDb();
 
   try {
     if (req.method === 'GET') {

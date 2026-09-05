@@ -10,7 +10,8 @@
     "dev:admin": "npm run dev --prefix admin"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.1"
+    "pg": "^8.13.1",
+    "bcryptjs": "^2.4.3"
   },
   "engines": {
     "node": ">=18"

@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 
       // Registra uso do cupom (idempotente por pedido_id)
       try {
-        if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        if (process.env.DATABASE_URL) {
           await confirmarResgatePorPedido(pedidoId);
         }
       } catch (cupomErr) {
