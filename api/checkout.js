@@ -22,7 +22,7 @@ import {
   rotuloDoNivel,
   formatarCnpj,
 } from './_lib/b2b.js';
-import { getSupabaseAdmin } from './_lib/supabase.js';
+import { getDb as getSupabaseAdmin } from './_lib/db.js';
 
 async function readJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;

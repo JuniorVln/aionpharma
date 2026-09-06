@@ -3,8 +3,8 @@
    PATCH /api/b2b/me — o lojista atualiza contato/endereço padrão
    ================================================================ */
 
-import { getSupabaseAdmin } from '../_lib/supabase.js';
-import { CAMPOS_PUBLICOS, contaDaRequisicao, contaPublica } from '../_lib/b2b.js';
+import { getDb as getSupabaseAdmin } from '../db.js';
+import { CAMPOS_PUBLICOS, contaDaRequisicao, contaPublica } from '../b2b.js';
 
 async function readJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;

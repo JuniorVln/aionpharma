@@ -6,7 +6,7 @@
    também promove para Distribuição.
    ================================================================ */
 
-import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { getDb as getSupabaseAdmin } from '../db.js';
 import {
   consultarCnpj,
   contaPublica,
@@ -14,7 +14,7 @@ import {
   normalizarCnpj,
   validarCnpj,
   CAMPOS_PUBLICOS,
-} from '../_lib/b2b.js';
+} from '../b2b.js';
 
 async function readJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;

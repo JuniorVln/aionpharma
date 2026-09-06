@@ -9,7 +9,7 @@
    ================================================================ */
 
 import crypto from 'node:crypto';
-import { getSupabaseAdmin } from './supabase.js';
+import { getDb as getSupabaseAdmin } from './db.js';
 
 /* ── Listas de preço da Olist/Tiny ──────────────────────────────
    Conta Aion: 321 = Cliente Final (vitrine B2C), 103 = Lojista,

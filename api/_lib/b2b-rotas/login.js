@@ -3,13 +3,13 @@
    5 senhas erradas → conta bloqueada por 15 minutos.
    ================================================================ */
 
-import { getSupabaseAdmin } from '../_lib/supabase.js';
+import { getDb as getSupabaseAdmin } from '../db.js';
 import {
   assinarToken,
   contaPublica,
   normalizarCnpj,
   verificarSenha,
-} from '../_lib/b2b.js';
+} from '../b2b.js';
 
 const MAX_TENTATIVAS = 5;
 const BLOQUEIO_MIN = 15;
