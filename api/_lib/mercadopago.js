@@ -18,6 +18,50 @@ function getAccessToken() {
   return token;
 }
 
+/* ----------------------------------------------------------------
+   Qual conta está por trás do token?
+   ATENÇÃO: `APP_USR-` NÃO quer dizer produção. Usuário de teste do
+   Mercado Pago também recebe token `APP_USR-`. A única checagem que
+   vale é perguntar pro próprio MP quem é o dono da credencial:
+   se `tags` inclui `test_user`, o dinheiro NÃO chega na conta real e
+   qualquer comprador de verdade leva "uma das partes é de teste".
+   Resultado fica em cache no processo (a credencial não muda em
+   tempo de execução).
+   ---------------------------------------------------------------- */
+let _contaCache = null;
+
+export async function contaDaCredencial() {
+  if (_contaCache) return _contaCache;
+  try {
+    const res = await fetch(`${BASE_URL}/users/me`, {
+      headers: { Authorization: `Bearer ${getAccessToken()}` },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { conhecida: false, ehTeste: null, motivo: data?.message || `HTTP ${res.status}` };
+    }
+    const tags = Array.isArray(data.tags) ? data.tags : [];
+    _contaCache = {
+      conhecida: true,
+      ehTeste: tags.includes('test_user'),
+      id: data.id,
+      nickname: data.nickname,
+      email: data.email,
+    };
+    if (_contaCache.ehTeste) {
+      console.error(
+        `[mercadopago] ALERTA: a credencial em uso e de CONTA DE TESTE (${_contaCache.nickname}). ` +
+        `Nenhum pagamento real entra na conta da Aion e todo cliente de verdade recebe ` +
+        `"uma das partes e de teste". Trocar MERCADOPAGO_ACCESS_TOKEN pelo Access Token de ` +
+        `producao da conta real.`
+      );
+    }
+    return _contaCache;
+  } catch (err) {
+    return { conhecida: false, ehTeste: null, motivo: err.message };
+  }
+}
+
 /**
  * Cria uma preferência de pagamento (Checkout Pro).
  * @param {object} opts
@@ -81,4 +125,4 @@ export async function obterPagamento(paymentId) {
   return data;
 }
 
-export default { criarPreferencia, obterPagamento };
+export default { criarPreferencia, obterPagamento, contaDaCredencial };

@@ -8,7 +8,7 @@
    ================================================================ */
 
 import { incluirPedido, montarPedido, mapaDePrecos } from './_lib/tiny.js';
-import { criarPreferencia } from './_lib/mercadopago.js';
+import { criarPreferencia, contaDaCredencial } from './_lib/mercadopago.js';
 import {
   buscarCupomValido,
   calcularDesconto,
@@ -200,14 +200,26 @@ export default async function handler(req, res) {
       }
     }
 
-    const isProd = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('APP_USR');
-    const paymentUrl = isProd ? preferencia.init_point : preferencia.sandbox_init_point;
+    // Qual conta recebe? `APP_USR-` nao prova producao: usuario de teste do
+    // Mercado Pago usa o mesmo prefixo. Perguntamos pro MP (cache no processo).
+    // O `sandbox_init_point` foi descontinuado (sandbox.mercadopago.com.br
+    // devolve erro), entao o link e sempre o `init_point` -- o que muda e o
+    // alerta, para ninguem acreditar que a loja esta recebendo de verdade.
+    const contaMp = await contaDaCredencial();
+    const paymentUrl = preferencia.init_point;
+    if (contaMp.ehTeste) {
+      console.error(
+        `[/api/checkout] pedido ${pedidoId} criado com credencial de TESTE do Mercado Pago ` +
+        `(${contaMp.nickname}); comprador real vai ver "uma das partes e de teste".`
+      );
+    }
 
     return res.status(200).json({
       pedidoId,
       numero,
       preferenceId: preferencia.id,
       paymentUrl,
+      ambienteMp: contaMp.conhecida ? (contaMp.ehTeste ? 'teste' : 'producao') : 'desconhecido',
       publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || null,
       itens: itensFinais.map((it) => ({ id: it.id, sku: it.sku, price: it.price, qty: it.qty })),
       b2b: conta ? { nivel: conta.nivel, nivelLabel: rotuloDoNivel(conta.nivel) } : null,
