@@ -45,8 +45,8 @@ export default async function handler(req, res) {
           situacao: null,
         };
         try {
-          const r = await obterPedido(p.pedido_id);
-          const pedido = r?.retorno?.pedido;
+          // obterPedido já devolve `retorno.pedido` desembrulhado.
+          const pedido = await obterPedido(p.pedido_id);
           if (pedido) {
             base.situacao = pedido.situacao || null;
             base.rastreamento = pedido.codigo_rastreamento || '';
