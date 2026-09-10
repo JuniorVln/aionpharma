@@ -9,8 +9,9 @@
    ================================================================ */
 
 import { obterPagamento } from './_lib/mercadopago.js';
-import { alterarSituacaoPedido, gerarNotaFiscal } from './_lib/tiny.js';
+import { alterarSituacaoPedido, gerarNotaFiscal, obterPedido } from './_lib/tiny.js';
 import { confirmarResgatePorPedido } from './_lib/cupons.js';
+import { enviarAvisoLoja, enviarConfirmacaoCliente } from './_lib/email.js';
 
 export default async function handler(req, res) {
   // Responda 200 rápido — o MP reenvia se não receber 200.
@@ -37,6 +38,25 @@ export default async function handler(req, res) {
 
     if (status === 'approved') {
       await alterarSituacaoPedido(pedidoId, 'aprovado');
+
+      // Confirmação por e-mail: o cliente precisa de um comprovante e a
+      // equipe precisa saber que entrou venda sem ficar olhando o painel.
+      // Falha de e-mail NÃO pode derrubar o webhook — o MP reenvia o
+      // aviso e o pedido seria reprocessado à toa.
+      try {
+        const pedido = await obterPedido(pedidoId);
+        if (pedido) {
+          const envios = await Promise.allSettled([
+            enviarConfirmacaoCliente(pedido),
+            enviarAvisoLoja(pedido),
+          ]);
+          envios
+            .filter((e) => e.status === 'rejected')
+            .forEach((e) => console.error('[/api/webhook] e-mail:', e.reason?.message || e.reason));
+        }
+      } catch (mailErr) {
+        console.error('[/api/webhook] e-mail:', mailErr.message);
+      }
 
       // Registra uso do cupom (idempotente por pedido_id)
       try {

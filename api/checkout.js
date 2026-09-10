@@ -157,7 +157,7 @@ export default async function handler(req, res) {
       itens: itensFinais,
       frete,
       observacoes: [
-        'Pedido originado pela loja online (aguardando pagamento).',
+        'Pedido da loja online.',
         obsB2B,
         obsCupom,
       ]

@@ -192,6 +192,9 @@ export function montarPedido({ cliente, itens, observacoes = '', situacao = 'abe
       },
     })),
     obs: [observacoes, obsFrete].filter(Boolean).join(' '),
+    // Marcador de canal: sem isso o pedido da loja se mistura na lista
+    // com os do Mercado Livre e os digitados à mão.
+    marcadores: [{ marcador: { descricao: 'Loja online' } }],
   };
 }
 
