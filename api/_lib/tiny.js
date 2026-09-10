@@ -157,18 +157,17 @@ export async function emitirNotaFiscal(idNota) {
 /* ── Helper: montar pedido a partir do carrinho ─────────────── */
 
 /* ── Fiscal: natureza de operação por tipo de cliente ───────────
-   Sem `nome_natureza_operacao` o Tiny assume a natureza PADRÃO da
-   conta, que é a de contribuinte (PJ). Resultado: nota de venda para
-   CPF saía como "para contribuinte", com carga tributária errada e
-   erro no faturamento — reclamação do fiscal da Aion em 10/09/2026.
-   Os nomes abaixo são os que já existem na conta (conferidos em notas
-   emitidas pelo Mercado Livre); dá para trocar por env sem mexer aqui. */
-const NATUREZA_CONSUMIDOR =
-  process.env.TINY_NATUREZA_CONSUMIDOR ||
-  '(NF-e) Venda de mercadorias de terceiros para consumidor final';
-const NATUREZA_CONTRIBUINTE =
-  process.env.TINY_NATUREZA_CONTRIBUINTE ||
-  'Venda de mercadorias de terceiros para contribuinte';
+   Sem natureza informada o Tiny assume a PADRÃO da conta, que é a de
+   contribuinte (PJ). Resultado: nota de venda para CPF saía como "para
+   contribuinte", com carga tributária errada e erro no faturamento —
+   reclamação do fiscal da Aion em 10/09/2026.
+
+   Usamos o ID e não o nome: casar por texto pegou uma natureza parecida
+   (337432794) em vez da que o Mercado Livre usa. Os ids abaixo são os da
+   conta da Aion — 337432712 é o que chega nos pedidos do ML para
+   consumidor final; 337432765 é a de contribuinte (a padrão antiga). */
+const ID_NATUREZA_CONSUMIDOR = process.env.TINY_ID_NATUREZA_CONSUMIDOR || '337432712';
+const ID_NATUREZA_CONTRIBUINTE = process.env.TINY_ID_NATUREZA_CONTRIBUINTE || '337432765';
 
 /** "Jadlog - Normal" → "Jadlog" (o que vai no campo transportadora da NF). */
 function nomeTransportadora(frete) {
@@ -190,8 +189,10 @@ export function montarPedido({ cliente, itens, observacoes = '', situacao = 'abe
     situacao,
     // Nome do canal: sem isso o pedido não se identifica como venda da
     // loja própria (o do Mercado Livre chega marcado com o canal dele).
-    ...(process.env.TINY_ID_ECOMMERCE ? { id_ecommerce: process.env.TINY_ID_ECOMMERCE } : {}),
-    nome_natureza_operacao: pj ? NATUREZA_CONTRIBUINTE : NATUREZA_CONSUMIDOR,
+    ...(process.env.TINY_ID_ECOMMERCE
+      ? { id_ecommerce: Number(process.env.TINY_ID_ECOMMERCE), ecommerce: 'Loja Aion Pharma' }
+      : {}),
+    id_natureza_operacao: pj ? ID_NATUREZA_CONTRIBUINTE : ID_NATUREZA_CONSUMIDOR,
     valor_frete: valorFrete,
     frete_por_conta: 'R', // R = por conta do Remetente (loja despacha via Olist Envios)
     // `forma_envio` é CÓDIGO de uma letra, não texto livre: 'T' = transportadora.
