@@ -156,18 +156,50 @@ export async function emitirNotaFiscal(idNota) {
 
 /* ── Helper: montar pedido a partir do carrinho ─────────────── */
 
+/* ── Fiscal: natureza de operação por tipo de cliente ───────────
+   Sem `nome_natureza_operacao` o Tiny assume a natureza PADRÃO da
+   conta, que é a de contribuinte (PJ). Resultado: nota de venda para
+   CPF saía como "para contribuinte", com carga tributária errada e
+   erro no faturamento — reclamação do fiscal da Aion em 10/09/2026.
+   Os nomes abaixo são os que já existem na conta (conferidos em notas
+   emitidas pelo Mercado Livre); dá para trocar por env sem mexer aqui. */
+const NATUREZA_CONSUMIDOR =
+  process.env.TINY_NATUREZA_CONSUMIDOR ||
+  '(NF-e) Venda de mercadorias de terceiros para consumidor final';
+const NATUREZA_CONTRIBUINTE =
+  process.env.TINY_NATUREZA_CONTRIBUINTE ||
+  'Venda de mercadorias de terceiros para contribuinte';
+
+/** "Jadlog - Normal" → "Jadlog" (o que vai no campo transportadora da NF). */
+function nomeTransportadora(frete) {
+  if (!frete) return '';
+  const bruto = String(frete.name || frete.company || '');
+  return bruto.split(/\s*[-–]\s*/)[0].trim().slice(0, 100);
+}
+
 export function montarPedido({ cliente, itens, observacoes = '', situacao = 'aberto', frete = null }) {
   // frete = { id, name, company, price } escolhido pelo cliente na cotação.
   // O valor vai no pedido para conciliar com a etiqueta gerada no Olist Envios.
   const valorFrete = frete && Number(frete.price) > 0 ? Number(frete.price) : 0;
-  const formaEnvio = frete ? [frete.company, frete.name].filter(Boolean).join(' ') : '';
-  const obsFrete = formaEnvio ? `Frete escolhido: ${formaEnvio} (R$ ${valorFrete.toFixed(2)}).` : '';
+  const servicoFrete = frete ? [frete.company, frete.name].filter(Boolean).join(' ') : '';
+  const obsFrete = servicoFrete ? `Frete escolhido: ${servicoFrete} (R$ ${valorFrete.toFixed(2)}).` : '';
+  const pj = (cliente.tipoPessoa || 'F') === 'J';
+
   return {
     data_pedido: '',
     situacao,
+    // Nome do canal: sem isso o pedido não se identifica como venda da
+    // loja própria (o do Mercado Livre chega marcado com o canal dele).
+    ...(process.env.TINY_ID_ECOMMERCE ? { id_ecommerce: process.env.TINY_ID_ECOMMERCE } : {}),
+    nome_natureza_operacao: pj ? NATUREZA_CONTRIBUINTE : NATUREZA_CONSUMIDOR,
     valor_frete: valorFrete,
     frete_por_conta: 'R', // R = por conta do Remetente (loja despacha via Olist Envios)
-    forma_envio: formaEnvio,
+    // `forma_envio` é CÓDIGO de uma letra, não texto livre: 'T' = transportadora.
+    // Mandar o nome do serviço aqui fazia o Tiny gravar 'S' e a nota sair sem
+    // transporte — o serviço vai em `forma_frete` e a empresa em `nome_transportador`.
+    forma_envio: frete ? 'T' : '',
+    forma_frete: servicoFrete.slice(0, 30),
+    nome_transportador: nomeTransportadora(frete),
     cliente: {
       nome: cliente.nome,
       tipoPessoa: cliente.tipoPessoa || 'F',
