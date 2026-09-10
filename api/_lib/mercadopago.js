@@ -62,31 +62,102 @@ export async function contaDaCredencial() {
   }
 }
 
+/* ── Dados que o antifraude do Mercado Pago usa ─────────────────
+   Uma preferência "magra" (só nome, e-mail e título do item) é
+   pontuada como risco alto: foi o que derrubou as duas primeiras
+   compras reais em 10/09/2026 com `cc_rejected_high_risk`. O motor
+   de risco quer saber QUEM compra (documento, telefone, endereço) e
+   O QUE compra (id, descrição, categoria). Mandar isso é a
+   recomendação oficial para aumentar aprovação — e é de graça.
+   ---------------------------------------------------------------- */
+
+const so = (v) => String(v ?? '').replace(/\D/g, '');
+
+/** "Maria Silva Souza" → { nome: 'Maria', sobrenome: 'Silva Souza' } */
+function partirNome(nomeCompleto) {
+  const partes = String(nomeCompleto || '').trim().split(/\s+/).filter(Boolean);
+  if (!partes.length) return { nome: undefined, sobrenome: undefined };
+  return { nome: partes[0], sobrenome: partes.slice(1).join(' ') || undefined };
+}
+
+/** Telefone BR: separa DDD do número, como o Mercado Pago espera. */
+function partirTelefone(telefone) {
+  const d = so(telefone);
+  if (d.length < 10) return undefined;
+  const semPais = d.startsWith('55') && d.length > 11 ? d.slice(2) : d;
+  return { area_code: semPais.slice(0, 2), number: semPais.slice(2) };
+}
+
+/** CPF (11) ou CNPJ (14) no formato do MP. */
+function documento(cpfCnpj) {
+  const d = so(cpfCnpj);
+  if (d.length === 11) return { type: 'CPF', number: d };
+  if (d.length === 14) return { type: 'CNPJ', number: d };
+  return undefined;
+}
+
+function enderecoPayer(cliente) {
+  const cep = so(cliente?.cep);
+  if (!cep) return undefined;
+  return {
+    zip_code: cep,
+    street_name: cliente.endereco || undefined,
+    street_number: cliente.numero ? String(cliente.numero) : undefined,
+  };
+}
+
 /**
  * Cria uma preferência de pagamento (Checkout Pro).
  * @param {object} opts
- * @param {Array<{title,quantity,unit_price,picture_url?}>} opts.items
+ * @param {Array<{id?,title,quantity,unit_price,picture_url?,description?}>} opts.items
  * @param {string} opts.externalReference  id do pedido no Tiny (para conciliar)
  * @param {number} [opts.shipmentCost]      valor do frete (somado ao total)
- * @param {object} [opts.payer]
+ * @param {object} [opts.cliente]           dados completos do comprador (antifraude)
  * @returns {Promise<{ id, init_point, sandbox_init_point }>}
  */
-export async function criarPreferencia({ items, externalReference, shipmentCost = 0, payer }) {
+export async function criarPreferencia({ items, externalReference, shipmentCost = 0, cliente }) {
   const siteUrl = (process.env.SITE_URL || '').replace(/\/$/, '');
+  const { nome, sobrenome } = partirNome(cliente?.nome);
+
+  const payer = cliente
+    ? {
+        name: nome,
+        surname: sobrenome,
+        email: cliente.email || undefined,
+        phone: partirTelefone(cliente.telefone),
+        identification: documento(cliente.cpfCnpj),
+        address: enderecoPayer(cliente),
+      }
+    : undefined;
+
+  const enderecoEntrega = so(cliente?.cep)
+    ? {
+        zip_code: so(cliente.cep),
+        street_name: [cliente.endereco, cliente.bairro, cliente.cidade, cliente.uf]
+          .filter(Boolean)
+          .join(', ') || undefined,
+        street_number: cliente.numero ? String(cliente.numero) : undefined,
+      }
+    : undefined;
 
   const preference = {
     items: items.map((it) => ({
+      id: it.id ? String(it.id) : undefined,
       title: it.title,
+      description: it.description || it.title,
+      category_id: 'health_beauty',       // linha veterinária/higiene
       quantity: Number(it.quantity),
       unit_price: Number(it.unit_price),
       currency_id: 'BRL',
       picture_url: it.picture_url || undefined,
     })),
-    shipments: Number(shipmentCost) > 0
-      ? { cost: Number(shipmentCost), mode: 'not_specified' }
-      : undefined,
+    shipments: {
+      ...(Number(shipmentCost) > 0 ? { cost: Number(shipmentCost) } : {}),
+      mode: 'not_specified',
+      receiver_address: enderecoEntrega,
+    },
     external_reference: externalReference,
-    payer: payer || undefined,
+    payer,
     back_urls: {
       success: `${siteUrl}/pedido-confirmado?status=sucesso`,
       pending: `${siteUrl}/pedido-confirmado?status=pendente`,

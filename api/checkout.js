@@ -206,15 +206,18 @@ export default async function handler(req, res) {
     const preferencia = await criarPreferencia({
       externalReference: String(pedidoId),
       items: itensFinais.map((it) => ({
+        id: it.sku || it.id,
         title: it.name,
+        description: it.name,
         quantity: it.qty,
         unit_price: it.price,
         picture_url: it.image || undefined,
       })),
       shipmentCost: valorFrete,
-      payer: clienteFinal.email
-        ? { name: clienteFinal.nome, email: clienteFinal.email }
-        : undefined,
+      // O comprador vai INTEIRO (documento, telefone, endereço): é o que o
+      // antifraude do Mercado Pago pontua. Mandar só nome e e-mail derrubou
+      // as duas primeiras compras reais em 10/09 com cc_rejected_high_risk.
+      cliente: clienteFinal,
     });
 
     if (cupomInfo) {
