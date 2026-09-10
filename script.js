@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRevealAnimations();
   initMobileNav();
   initB2B();
+  initPF();
   initCatalog();
   initProductPage();
 });
@@ -607,6 +608,285 @@ function b2bLogout() {
   showToast('👋 Você saiu da conta de lojista.');
 }
 
+/* ================================================================
+   Conta do cliente (CPF)
+   Existe para acompanhar pedidos e não redigitar endereço. NÃO muda
+   preço: PF compra na mesma tabela de quem compra sem conta — por
+   isso a sessão não vai em /api/produtos, só no checkout.
+   ================================================================ */
+
+const PF_KEY = 'aion_pf';
+let pfSession = null;
+
+function pfCarregarSessao() {
+  try {
+    pfSession = JSON.parse(localStorage.getItem(PF_KEY) || 'null');
+  } catch {
+    pfSession = null;
+  }
+  return pfSession;
+}
+
+function pfSalvarSessao(sessao) {
+  pfSession = sessao;
+  if (sessao) localStorage.setItem(PF_KEY, JSON.stringify(sessao));
+  else localStorage.removeItem(PF_KEY);
+}
+
+function pfLogado() {
+  return Boolean(pfSession?.token);
+}
+
+/** Bearer para o checkout: lojista tem prioridade (é quem muda preço). */
+function authHeaders(extra = {}) {
+  if (b2bLogado()) return { ...extra, Authorization: `Bearer ${b2bSession.token}` };
+  if (pfLogado()) return { ...extra, Authorization: `Bearer ${pfSession.token}` };
+  return { ...extra };
+}
+
+function pfSessaoInvalida() {
+  if (!pfLogado()) return;
+  pfSalvarSessao(null);
+  pfAplicarUI();
+  pfRenderizarPagina();
+  showToast('🔒 Sua sessão expirou. Entre de novo na sua conta.', 5000);
+}
+
+async function pfApi(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (pfLogado()) headers.Authorization = `Bearer ${pfSession.token}`;
+  const r = await fetch(path, { ...options, headers });
+  const data = await r.json().catch(() => ({}));
+  if (r.status === 401 && pfLogado()) pfSessaoInvalida();
+  if (!r.ok) throw new Error(data.error || data.detail || `Erro ${r.status}`);
+  return data;
+}
+
+/** Link do menu vira "Minha Conta (Nome)" enquanto o cliente está logado. */
+function pfAplicarUI() {
+  const nome = (pfSession?.conta?.nome || '').split(' ')[0];
+  document.querySelectorAll('a[href="conta.html"]').forEach((a) => {
+    if (a.closest('.footer-links')) return;
+    a.textContent = pfLogado() && nome ? `Minha Conta (${nome})` : 'Minha Conta';
+  });
+}
+
+function initPF() {
+  pfCarregarSessao();
+  pfAplicarUI();
+  if (pfLogado()) {
+    // Revalida em silêncio: conta desativada precisa cair já nesta visita.
+    pfApi('/api/b2b/pf-me')
+      .then((data) => {
+        pfSalvarSessao({ ...pfSession, conta: data.conta });
+        pfAplicarUI();
+        pfRenderizarPagina();
+      })
+      .catch(() => { /* offline ou sessão caiu — pfApi já tratou o 401 */ });
+  }
+  pfRenderizarPagina();
+}
+
+/* ── Página conta.html ───────────────────────────────────────── */
+
+function pfRenderizarPagina() {
+  const painel = document.getElementById('pf-painel');
+  const acesso = document.getElementById('pf-acesso');
+  if (!painel || !acesso) return; // não estamos na conta.html
+
+  painel.hidden = !pfLogado();
+  acesso.hidden = pfLogado();
+  if (pfLogado()) {
+    pfPreencherPainel();
+    pfCarregarPedidos();
+  }
+}
+
+function pfPreencherPainel() {
+  const conta = pfSession?.conta;
+  if (!conta || !document.getElementById('pf-painel')) return;
+
+  const set = (id, valor) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = valor;
+  };
+  set('pf-painel-nome', conta.nome || '—');
+  set('pf-painel-doc', `CPF ${conta.cpf} · ${conta.email}`);
+
+  const val = (id, valor) => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = valor || '';
+  };
+  val('pf-dados-nome', conta.nome);
+  val('pf-dados-telefone', conta.telefone);
+  val('pf-dados-cep', conta.endereco?.cep);
+  val('pf-dados-endereco', conta.endereco?.logradouro);
+  val('pf-dados-numero', conta.endereco?.numero);
+  val('pf-dados-complemento', conta.endereco?.complemento);
+  val('pf-dados-bairro', conta.endereco?.bairro);
+  val('pf-dados-cidade', conta.endereco?.cidade);
+  val('pf-dados-uf', conta.endereco?.uf);
+}
+
+async function pfCarregarPedidos() {
+  const box = document.getElementById('pf-pedidos-lista');
+  if (!box) return;
+  try {
+    const { pedidos } = await pfApi('/api/b2b/pf-pedidos');
+    if (!pedidos || !pedidos.length) {
+      box.innerHTML = '<p class="b2b-muted">Você ainda não fez pedidos por aqui. <a href="produtos.html">Ver produtos</a>.</p>';
+      return;
+    }
+    box.innerHTML = pedidos
+      .map((p) => {
+        const data = new Date(p.data).toLocaleDateString('pt-BR');
+        const situacao = p.situacao || 'Processando';
+        const rastreio = p.rastreamento
+          ? `<span class="pf-pedido-rastreio">Rastreio ${p.rastreamento}</span>`
+          : '';
+        return `
+          <div class="pf-pedido">
+            <div class="pf-pedido-info">
+              <strong>Pedido ${p.numero}</strong>
+              <span class="b2b-muted">${data}</span>
+              ${rastreio}
+            </div>
+            <div class="pf-pedido-valor">
+              <span class="pf-pedido-situacao">${situacao}</span>
+              <strong>${formatPrice(p.total)}</strong>
+            </div>
+          </div>`;
+      })
+      .join('');
+  } catch (err) {
+    box.innerHTML = `<p class="b2b-muted">Não consegui carregar agora: ${err.message}</p>`;
+  }
+}
+
+function pfMostrarAba(aba) {
+  const ehLogin = aba === 'login';
+  document.getElementById('pf-form-login').hidden = !ehLogin;
+  document.getElementById('pf-form-cadastro').hidden = ehLogin;
+  document.getElementById('pf-tab-login').classList.toggle('active', ehLogin);
+  document.getElementById('pf-tab-cadastro').classList.toggle('active', !ehLogin);
+}
+
+/** Máscara de CPF. */
+function onCpfInput(el) {
+  const v = el.value.replace(/\D/g, '').slice(0, 11);
+  let out = v;
+  if (v.length > 9) out = `${v.slice(0, 3)}.${v.slice(3, 6)}.${v.slice(6, 9)}-${v.slice(9)}`;
+  else if (v.length > 6) out = `${v.slice(0, 3)}.${v.slice(3, 6)}.${v.slice(6)}`;
+  else if (v.length > 3) out = `${v.slice(0, 3)}.${v.slice(3)}`;
+  el.value = out;
+}
+
+async function pfLogin(event) {
+  event.preventDefault();
+  const btn = document.getElementById('pf-login-submit');
+  const f = Object.fromEntries(new FormData(event.target).entries());
+  if (btn) { btn.disabled = true; btn.textContent = 'Entrando…'; }
+  try {
+    const data = await pfApi('/api/b2b/pf-login', {
+      method: 'POST',
+      body: JSON.stringify({ identificador: f.identificador, senha: f.senha }),
+    });
+    pfSalvarSessao({ token: data.token, conta: data.conta });
+    pfAplicarUI();
+    pfRenderizarPagina();
+    showToast(`✅ Bem-vindo de volta, ${(data.conta.nome || '').split(' ')[0]}!`, 4000);
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 4000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+  }
+}
+
+async function pfCadastrar(event) {
+  event.preventDefault();
+  const btn = document.getElementById('pf-cad-submit');
+  const f = Object.fromEntries(new FormData(event.target).entries());
+  if (btn) { btn.disabled = true; btn.textContent = 'Criando…'; }
+  try {
+    const data = await pfApi('/api/b2b/pf-cadastro', {
+      method: 'POST',
+      body: JSON.stringify(f),
+    });
+    // Conta de consumidor nasce ativa: não muda preço, então não há o
+    // que aprovar. Já entra logada para o cliente seguir comprando.
+    pfSalvarSessao({ token: data.token, conta: data.conta });
+    event.target.reset();
+    pfAplicarUI();
+    pfRenderizarPagina();
+    showToast('🎉 Conta criada! Seus próximos pedidos ficam salvos aqui.', 5000);
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 5000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Criar conta'; }
+  }
+}
+
+async function pfSalvarDados(event) {
+  event.preventDefault();
+  const btn = document.getElementById('pf-dados-submit');
+  const f = Object.fromEntries(new FormData(event.target).entries());
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+  try {
+    const data = await pfApi('/api/b2b/pf-me', { method: 'PATCH', body: JSON.stringify(f) });
+    pfSalvarSessao({ ...pfSession, conta: data.conta });
+    pfAplicarUI();
+    showToast('✅ Dados atualizados.');
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 4000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Salvar dados'; }
+  }
+}
+
+function pfSair() {
+  pfSalvarSessao(null);
+  pfAplicarUI();
+  pfRenderizarPagina();
+  showToast('👋 Você saiu da sua conta.');
+}
+
+/**
+ * Checkout do cliente PF: traz CPF, contato e endereço da conta. Tudo
+ * continua editável — só o CPF fica travado, porque é ele que liga o
+ * pedido ao histórico (o servidor usa o da conta de qualquer jeito).
+ */
+function pfPreencherCheckout() {
+  const form = document.getElementById('checkout-form');
+  if (!form || b2bLogado() || !pfLogado()) return;
+  const campo = (nome) => form.elements[nome];
+  const conta = pfSession.conta || {};
+
+  const tipo = campo('tipoPessoa');
+  const doc = campo('cpfCnpj');
+  if (tipo) { tipo.value = 'F'; onTipoPessoa(tipo); }
+  if (doc) {
+    doc.value = conta.cpf || '';
+    doc.readOnly = true;
+    doc.title = 'Pedido emitido no CPF da sua conta';
+  }
+
+  const preencher = (nome, valor) => {
+    const el = campo(nome);
+    if (el && !el.value && valor) el.value = valor;
+  };
+  preencher('nome', conta.nome);
+  preencher('email', conta.email);
+  preencher('telefone', conta.telefone);
+  const end = conta.endereco || {};
+  preencher('cep', end.cep);
+  preencher('endereco', end.logradouro);
+  preencher('numero', end.numero);
+  preencher('complemento', end.complemento);
+  preencher('bairro', end.bairro);
+  preencher('cidade', end.cidade);
+  preencher('uf', end.uf);
+}
+
 /* ── Cupom de desconto ───────────────────────────────────────── */
 
 async function aplicarCupom() {
@@ -781,6 +1061,7 @@ function openCheckout() {
   const cepForm = document.getElementById('checkout-cep');
   if (cepForm && cepCart && cepCart.value) { cepForm.value = cepCart.value; onCheckoutCep(cepForm); }
   b2bPreencherCheckout();
+  pfPreencherCheckout();
   renderCheckoutResumo();
   document.getElementById('checkout-overlay')?.classList.add('open');
   document.getElementById('checkout-panel')?.classList.add('open');
@@ -857,7 +1138,7 @@ async function enviarCheckout(event) {
   try {
     const r = await fetch('/api/checkout', {
       method: 'POST',
-      headers: b2bHeaders({ 'Content-Type': 'application/json' }),
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         cliente,
         itens: cart,

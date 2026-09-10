@@ -232,6 +232,10 @@ export async function contaDaRequisicao(req) {
     if (!token) return null;
     const payload = verificarToken(token);
     if (!payload?.sub) return null;
+    // Sessão de cliente PF usa o mesmo segredo e o mesmo formato. Recusar
+    // aqui é o que impede um consumidor de cair na tabela de lojista
+    // caso um id coincida entre as duas tabelas.
+    if (payload.tipo === 'pf') return null;
 
     const sb = getSupabaseAdmin();
     const { data, error } = await sb

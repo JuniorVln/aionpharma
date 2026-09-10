@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minha Conta — Aion Pharma</title>
+  <meta name="description" content="Crie sua conta na loja da Aion Pharma para acompanhar pedidos, guardar seu endereço e comprar mais rápido da próxima vez." />
+  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="icon" type="image/png" href="assets/brand/logo-mark.png" />
+</head>
+<body>
+
+<!-- ───── Header ───── -->
+<header id="header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="index.html" class="logo" aria-label="Aion Pharma Home"><img src="assets/brand/logo.png" alt="Aion Pharma" class="logo-img" /></a>
+      <nav class="nav-links" aria-label="Navegação principal">
+        <a href="index.html">Início</a>
+        <a href="produtos.html">Produtos</a>
+        <a href="blog.html">Blog</a>
+        <a href="sobre.html">Sobre</a>
+        <a href="contato.html">Contato</a>
+        <a href="conta.html" class="active">Minha Conta</a>
+        <a href="b2b.html">Área do Lojista</a>
+      </nav>
+      <div class="header-actions">
+        <a href="produtos.html" class="btn btn-primary btn-sm">Ver Produtos</a>
+      </div>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Menu mobile" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+<nav class="mobile-nav" id="mobile-nav" aria-label="Navegação mobile">
+  <a href="index.html" onclick="closeMobileNav()">Início</a>
+  <a href="produtos.html" onclick="closeMobileNav()">Produtos</a>
+  <a href="blog.html" onclick="closeMobileNav()">Blog</a>
+  <a href="sobre.html" onclick="closeMobileNav()">Sobre</a>
+  <a href="contato.html" onclick="closeMobileNav()">Contato</a>
+  <a href="conta.html" onclick="closeMobileNav()">Minha Conta</a>
+  <a href="b2b.html" onclick="closeMobileNav()">Área do Lojista</a>
+  <a href="produtos.html" class="btn btn-primary" style="margin-top:1rem;justify-content:center">Ver Produtos →</a>
+</nav>
+
+<!-- Page Hero -->
+<section class="page-hero">
+  <div class="container">
+    <div class="page-hero-tag">Conta do cliente</div>
+    <h1 class="display-2">Minha Conta</h1>
+    <p>Acompanhe seus pedidos, guarde seu endereço e finalize a próxima compra sem digitar tudo de novo. Comprar sem conta continua funcionando normalmente.</p>
+  </div>
+</section>
+
+<main class="content-page">
+  <div class="container">
+
+    <!-- ── Logado: painel da conta ── -->
+    <section id="pf-painel" class="b2b-painel" hidden>
+      <div class="b2b-card b2b-card-conta">
+        <div class="b2b-conta-head">
+          <div>
+            <span class="b2b-badge">Cliente</span>
+            <h2 id="pf-painel-nome">—</h2>
+            <p class="b2b-muted" id="pf-painel-doc">—</p>
+          </div>
+        </div>
+        <p class="b2b-muted">
+          Seus dados preenchem o checkout automaticamente. Dá para alterar em cada pedido.
+        </p>
+        <div class="b2b-acoes">
+          <a href="produtos.html" class="btn btn-primary btn-sm">Comprar</a>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="pfSair()">Sair</button>
+        </div>
+      </div>
+
+      <div class="b2b-card">
+        <h3>Meus dados</h3>
+        <p class="b2b-muted">CPF e e-mail não mudam por aqui — eles identificam a conta e os pedidos já emitidos. Precisa corrigir? Chame a gente no WhatsApp.</p>
+        <form class="contact-form" id="pf-form-dados" onsubmit="pfSalvarDados(event)">
+          <div class="field-row">
+            <div class="field">
+              <label for="pf-dados-nome">Nome completo</label>
+              <input type="text" id="pf-dados-nome" name="nome" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="pf-dados-telefone">Telefone / WhatsApp</label>
+              <input type="tel" id="pf-dados-telefone" name="telefone" autocomplete="tel" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="pf-dados-cep">CEP</label>
+              <input type="text" id="pf-dados-cep" name="cep" inputmode="numeric" placeholder="00000-000" />
+            </div>
+            <div class="field">
+              <label for="pf-dados-endereco">Endereço</label>
+              <input type="text" id="pf-dados-endereco" name="endereco" autocomplete="street-address" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="pf-dados-numero">Número</label>
+              <input type="text" id="pf-dados-numero" name="numero" />
+            </div>
+            <div class="field">
+              <label for="pf-dados-complemento">Complemento</label>
+              <input type="text" id="pf-dados-complemento" name="complemento" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="pf-dados-bairro">Bairro</label>
+              <input type="text" id="pf-dados-bairro" name="bairro" />
+            </div>
+            <div class="field">
+              <label for="pf-dados-cidade">Cidade</label>
+              <input type="text" id="pf-dados-cidade" name="cidade" />
+            </div>
+            <div class="field field-uf">
+              <label for="pf-dados-uf">UF</label>
+              <input type="text" id="pf-dados-uf" name="uf" maxlength="2" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="pf-dados-submit">Salvar dados</button>
+        </form>
+      </div>
+
+      <div class="b2b-card">
+        <h3>Meus pedidos</h3>
+        <div id="pf-pedidos-lista" class="pf-pedidos">
+          <p class="b2b-muted">Carregando…</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Deslogado: entrar / criar conta ── -->
+    <section id="pf-acesso" class="b2b-grid">
+      <div class="b2b-card">
+        <div class="b2b-tabs" role="tablist">
+          <button type="button" class="b2b-tab active" id="pf-tab-login" onclick="pfMostrarAba('login')">Entrar</button>
+          <button type="button" class="b2b-tab" id="pf-tab-cadastro" onclick="pfMostrarAba('cadastro')">Criar conta</button>
+        </div>
+
+        <!-- Login -->
+        <form class="contact-form" id="pf-form-login" onsubmit="pfLogin(event)">
+          <div class="field">
+            <label for="pf-login-id">CPF ou e-mail</label>
+            <input type="text" id="pf-login-id" name="identificador" required autocomplete="username" placeholder="000.000.000-00" />
+          </div>
+          <div class="field">
+            <label for="pf-login-senha">Senha</label>
+            <input type="password" id="pf-login-senha" name="senha" required autocomplete="current-password" />
+          </div>
+          <button type="submit" class="btn btn-primary" id="pf-login-submit">Entrar</button>
+          <p class="b2b-muted b2b-ajuda">
+            Esqueceu a senha? Chame no <a href="https://wa.me/5541992427421?text=Ol%C3%A1!%20Preciso%20redefinir%20a%20senha%20da%20minha%20conta%20na%20loja." target="_blank" rel="noopener">WhatsApp</a> que a gente reseta.
+          </p>
+        </form>
+
+        <!-- Cadastro -->
+        <form class="contact-form" id="pf-form-cadastro" onsubmit="pfCadastrar(event)" hidden>
+          <div class="field">
+            <label for="pf-cad-nome">Nome completo*</label>
+            <input type="text" id="pf-cad-nome" name="nome" required autocomplete="name" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="pf-cad-cpf">CPF*</label>
+              <input type="text" id="pf-cad-cpf" name="cpf" required inputmode="numeric" placeholder="000.000.000-00" oninput="onCpfInput(this)" />
+              <span class="b2b-hint" id="pf-cad-cpf-hint"></span>
+            </div>
+            <div class="field">
+              <label for="pf-cad-telefone">Telefone / WhatsApp*</label>
+              <input type="tel" id="pf-cad-telefone" name="telefone" required autocomplete="tel" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="pf-cad-email">E-mail*</label>
+            <input type="email" id="pf-cad-email" name="email" required autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="pf-cad-senha">Senha* (mínimo 8 caracteres)</label>
+            <input type="password" id="pf-cad-senha" name="senha" required minlength="8" autocomplete="new-password" />
+          </div>
+          <button type="submit" class="btn btn-primary" id="pf-cad-submit">Criar conta</button>
+          <p class="b2b-muted b2b-ajuda">
+            Ao criar a conta você concorda com os <a href="termos.html">Termos de Uso</a> e a <a href="privacidade.html">Política de Privacidade</a>.
+          </p>
+        </form>
+      </div>
+
+      <aside class="b2b-card b2b-vantagens">
+        <h3>Para que serve a conta</h3>
+        <ul class="b2b-lista">
+          <li><strong>Acompanhe seus pedidos</strong> e o status de cada compra, sem precisar procurar e-mail.</li>
+          <li><strong>Endereço salvo</strong> — o checkout já vem preenchido na próxima compra.</li>
+          <li><strong>Mesmo preço</strong> de quem compra sem conta: criar cadastro não muda nada no valor.</li>
+          <li><strong>Compra sem conta continua valendo</strong> — a conta é comodidade, não obrigação.</li>
+        </ul>
+        <p class="b2b-muted">
+          É pet shop ou clínica? A compra com CNPJ tem preço de revenda na <a href="b2b.html">Área do Lojista</a>.
+        </p>
+      </aside>
+    </section>
+
+  </div>
+</main>
+
+<footer id="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html" class="logo"><img src="assets/brand/logo.png" alt="Aion Pharma" class="logo-img" /></a>
+        <p>Desenvolvemos produtos veterinários com rigor científico e carinho pelos animais. Porque o seu pet merece o melhor cuidado.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Produtos</h4>
+        <ul class="footer-links">
+          <li><a href="produtos.html?categoria=higiene-bucal">Tartoff Gel Dental</a></li>
+          <li><a href="produtos.html?categoria=higiene-lar">Pellet Higiênico</a></li>
+          <li><a href="produtos.html">Kits</a></li>
+          <li><a href="produtos.html">Ver Todos</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Empresa</h4>
+        <ul class="footer-links">
+          <li><a href="sobre.html">Sobre a Aion</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Ajuda</h4>
+        <ul class="footer-links">
+          <li><a href="conta.html">Minha Conta</a></li>
+          <li><a href="b2b.html">Área do Lojista</a></li>
+          <li><a href="entrega.html">Política de Entrega</a></li>
+          <li><a href="trocas.html">Trocas e Devoluções</a></li>
+          <li><a href="privacidade.html">Política de Privacidade</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Aion Pharma. Todos os direitos reservados.</p>
+      <div class="footer-seals">
+        <span>🔒 Site Seguro</span>
+        <span>🛡️ Compra Protegida</span>
+        <span>✅ MAPA Registrado</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast-container" id="toast-container"></div>
+<script src="script.js?v=6"></script>
+</body>
+</html>

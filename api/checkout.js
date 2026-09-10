@@ -23,6 +23,7 @@ import {
   formatarCnpj,
 } from './_lib/b2b.js';
 import { getDb as getSupabaseAdmin } from './_lib/db.js';
+import { contaPfDaRequisicao, formatarCpf } from './_lib/pf.js';
 
 async function readJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -87,6 +88,11 @@ export default async function handler(req, res) {
     const conta = await contaDaRequisicao(req);
     const idListaPreco = conta ? idListaPrecoDoNivel(conta.nivel) : idListaPrecoB2C();
 
+    // Sessão PF: o mesmo Bearer pode ser de uma conta de consumidor. Ela
+    // NÃO muda preço (PF compra na tabela Cliente Final, igual a quem
+    // compra sem conta) — serve para vincular o pedido ao histórico.
+    const contaPf = conta ? null : await contaPfDaRequisicao(req);
+
     if (conta && cupomCodigo) {
       return res.status(400).json({
         error: 'Cupom de desconto não vale para pedidos com preço de lojista.',
@@ -98,15 +104,26 @@ export default async function handler(req, res) {
       exigir: Boolean(conta),
     });
 
-    const clienteFinal = conta
-      ? {
-          ...cliente,
-          tipoPessoa: 'J',
-          cpfCnpj: formatarCnpj(conta.cnpj),
-          nome: cliente.nome || conta.razao_social,
-          email: cliente.email || conta.email,
-        }
-      : cliente;
+    let clienteFinal = cliente;
+    if (conta) {
+      clienteFinal = {
+        ...cliente,
+        tipoPessoa: 'J',
+        cpfCnpj: formatarCnpj(conta.cnpj),
+        nome: cliente.nome || conta.razao_social,
+        email: cliente.email || conta.email,
+      };
+    } else if (contaPf) {
+      // O CPF do pedido é o da conta logada, não o que veio no formulário:
+      // a nota sai no titular da conta e o histórico não mistura pessoas.
+      clienteFinal = {
+        ...cliente,
+        tipoPessoa: 'F',
+        cpfCnpj: formatarCpf(contaPf.cpf),
+        nome: cliente.nome || contaPf.nome,
+        email: cliente.email || contaPf.email,
+      };
+    }
 
     const valorFrete = frete && Number(frete.price) > 0 ? Number(frete.price) : 0;
     const subtotalOriginal = itensConferidos.reduce(
@@ -169,6 +186,23 @@ export default async function handler(req, res) {
       }
     }
 
+    if (contaPf) {
+      try {
+        await getSupabaseAdmin()
+          .from('pf_orders')
+          .insert({
+            account_id: contaPf.id,
+            pedido_id: String(pedidoId),
+            pedido_numero: numero ? String(numero) : null,
+            valor_itens: Math.round((subtotalOriginal - valorDesconto) * 100) / 100,
+            valor_frete: valorFrete,
+          });
+      } catch (pfErr) {
+        // Pedido já existe no Tiny — o histórico é secundário, não bloqueia.
+        console.error('[/api/checkout] pf_orders:', pfErr.message);
+      }
+    }
+
     const preferencia = await criarPreferencia({
       externalReference: String(pedidoId),
       items: itensFinais.map((it) => ({
@@ -223,6 +257,7 @@ export default async function handler(req, res) {
       publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || null,
       itens: itensFinais.map((it) => ({ id: it.id, sku: it.sku, price: it.price, qty: it.qty })),
       b2b: conta ? { nivel: conta.nivel, nivelLabel: rotuloDoNivel(conta.nivel) } : null,
+      pf: contaPf ? { nome: contaPf.nome } : null,
       cupom: cupomInfo
         ? {
             codigo: cupomInfo.codigo,
