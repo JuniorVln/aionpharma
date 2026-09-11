@@ -8,7 +8,7 @@ export default function Layout() {
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <img src="/assets/brand/logo-on-dark.svg" alt="Aion Pharma" />
+          <img src="/assets/brand/logo-light.png" alt="Aion Pharma" />
           <span className="brand-sub">CRM</span>
         </div>
         <nav className="nav">

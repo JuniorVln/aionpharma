@@ -260,11 +260,12 @@ export default function VitrinePage() {
 
             <div className="row-2">
               <label>
-                Título
-                <input
+                Título (enter quebra a linha)
+                <textarea
+                  rows={2}
                   value={destaque.titulo || ''}
                   onChange={(e) => mexer('titulo', e.target.value)}
-                  placeholder="Diga Adeus ao"
+                  placeholder={'Diga Adeus\nao'}
                 />
               </label>
               <label>
