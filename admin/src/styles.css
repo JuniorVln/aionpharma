@@ -143,9 +143,15 @@ a {
 }
 
 .brand img {
-  height: 36px;
+  height: 34px;
   width: auto;
   max-width: 180px;
+  /* o logo oficial é azul-marinho: numa barra escura ele some, então
+     ganha um cartão branco em vez de uma versão inventada da marca */
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  box-sizing: content-box;
 }
 
 .brand-sub {
@@ -356,6 +362,10 @@ select:focus {
   padding: 0.75rem 0.4rem;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
+}
+
+.table td {
+  vertical-align: middle;
 }
 
 .td-actions {
