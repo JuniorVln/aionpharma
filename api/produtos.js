@@ -4,9 +4,15 @@
    para o frontend. Enriquece cada item com imagem/descrição via
    produto.obter (com cache na borda da Vercel).
    Query: ?busca=tartoff
+
+   Também serve as imagens enviadas pelo painel (?img=<sku|destaque>)
+   e devolve o bloco de destaque da home junto do catálogo — a Vercel
+   Hobby só permite 12 funções em /api, então estas duas rotas moram
+   aqui em vez de virarem arquivos novos.
    ================================================================ */
 
 import { pesquisarProdutos, obterProduto, extrairImagem } from './_lib/tiny.js';
+import { lerDestaque, lerOverrides, aplicarOverrides, lerImagem } from './_lib/vitrine.js';
 import {
   contaDaRequisicao,
   idListaPrecoB2C,
@@ -71,6 +77,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
+  // Imagem guardada no painel. Responde antes de falar com o Tiny.
+  const alvoImagem = (req.query?.img || '').toString().trim();
+  if (alvoImagem) {
+    try {
+      const img = await lerImagem(alvoImagem);
+      if (!img) return res.status(404).json({ error: 'Imagem não encontrada' });
+      res.setHeader('Content-Type', img.mime);
+      // A URL carrega ?v=<timestamp>, então o conteúdo desta URL é imutável.
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.status(200).send(img.bytes);
+    } catch (err) {
+      console.error('[/api/produtos?img]', err.message);
+      return res.status(502).json({ error: 'Falha ao ler a imagem', detail: err.message });
+    }
+  }
+
   try {
     const busca = (req.query?.busca || '').toString();
     // Visitante comum vê a lista "Cliente Final" (321 na conta Aion).
@@ -99,20 +121,33 @@ export default async function handler(req, res) {
       }
     });
 
+    // Correções do painel (nome/descrição/foto) e destaque da home.
+    // Banco fora do ar não pode derrubar a vitrine: cai no catálogo cru.
+    let produtos = detalhados;
+    let destaque = null;
+    try {
+      const [overrides, blocoDestaque] = await Promise.all([lerOverrides(), lerDestaque()]);
+      produtos = aplicarOverrides(detalhados, overrides);
+      destaque = blocoDestaque;
+    } catch (err) {
+      console.error('[/api/produtos] vitrine indisponível:', err.message);
+    }
+
     // Preço B2B NUNCA pode ir para o cache compartilhado da Vercel:
     // um visitante seguinte receberia a tabela de custo.
     if (conta) {
       res.setHeader('Cache-Control', 'private, no-store');
       res.setHeader('Vary', 'Authorization');
       return res.status(200).json({
-        produtos: detalhados,
+        produtos,
+        destaque,
         b2b: { nivel: conta.nivel, nivelLabel: rotuloDoNivel(conta.nivel) },
       });
     }
 
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     res.setHeader('Vary', 'Authorization');
-    return res.status(200).json({ produtos: detalhados });
+    return res.status(200).json({ produtos, destaque });
   } catch (err) {
     console.error('[/api/produtos]', err.message);
     return res.status(502).json({ error: 'Falha ao buscar produtos no Tiny', detail: err.message });

@@ -12,6 +12,7 @@ export default function Layout() {
           <span className="brand-sub">CRM</span>
         </div>
         <nav className="nav">
+          <NavLink to="/vitrine">Vitrine</NavLink>
           <NavLink to="/cupons">Cupons</NavLink>
           <NavLink to="/influencers">Influencers</NavLink>
           <NavLink to="/b2b">Contas CNPJ</NavLink>

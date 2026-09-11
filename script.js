@@ -1280,7 +1280,10 @@ function initCatalog() {
     })
     .then((data) => {
       CATALOG = (data.produtos || []).map(withTags);
-      if (homeGrid) renderProducts(homeGrid, CATALOG.slice(0, 4));
+      if (homeGrid) {
+        aplicarDestaque(data.destaque, data.produtos || []);
+        renderProducts(homeGrid, CATALOG.slice(0, 4));
+      }
       if (catalogGrid) {
         renderProducts(catalogGrid, CATALOG);
         updateFilterCounts(CATALOG);
@@ -1293,6 +1296,85 @@ function initCatalog() {
         <button class="btn btn-primary btn-sm" onclick="location.reload()">Tentar novamente</button>
       </div>`;
     });
+}
+
+/* ================================================================
+   Destaque da home — o bloco grande vem do painel (/admin → Vitrine).
+   O HTML da página já traz uma versão estática: se a API não
+   responder, é ela que fica no ar. Aqui só sobrescrevemos o que
+   o painel tiver preenchido.
+   ================================================================ */
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function aplicarDestaque(d, produtos) {
+  const secao = document.getElementById('featured-product');
+  if (!secao || !d) return;
+
+  if (d.ativo === false) {
+    secao.style.display = 'none';
+    return;
+  }
+
+  const badge = document.getElementById('destaque-badge');
+  if (badge) {
+    if (d.badge) { badge.textContent = d.badge; badge.style.display = ''; }
+    else badge.style.display = 'none';
+  }
+
+  const titulo = document.getElementById('destaque-titulo');
+  if (titulo && (d.titulo || d.tituloRealce)) {
+    const linhas = String(d.titulo || '').split('\n').map(escHtml).join('<br />');
+    const realce = d.tituloRealce ? ` <span>${escHtml(d.tituloRealce)}</span>` : '';
+    titulo.innerHTML = linhas + realce;
+  }
+
+  const texto = document.getElementById('destaque-texto');
+  if (texto && d.texto) texto.textContent = d.texto;
+
+  const bene = document.getElementById('destaque-beneficios');
+  if (bene && Array.isArray(d.beneficios) && d.beneficios.length) {
+    const check = `<div class="benefit-icon"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg></div>`;
+    bene.innerHTML = d.beneficios
+      .map((b) => `<div class="benefit-item">${check}${escHtml(b)}</div>`)
+      .join('');
+  }
+
+  // Preço: sempre o do sistema, pelo código escolhido no painel.
+  const precoEl = document.getElementById('destaque-preco');
+  if (precoEl) {
+    const p = d.sku ? produtos.find((x) => String(x.sku) === String(d.sku)) : null;
+    if (!p) {
+      precoEl.style.display = 'none';
+    } else {
+      const [inteiro, centavos] = Number(p.price).toFixed(2).split('.');
+      precoEl.style.display = '';
+      precoEl.innerHTML =
+        `${d.precoPrefixo ? `<span class="per">${escHtml(d.precoPrefixo)}</span>` : ''}` +
+        `<span class="currency">R$</span>` +
+        `<span class="amount">${escHtml(inteiro)}<sup style="font-size:1.5rem;font-weight:700">,${escHtml(centavos)}</sup></span>`;
+    }
+  }
+
+  const ctas = document.getElementById('destaque-ctas');
+  if (ctas && d.ctaLabel) {
+    const seta = `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    let html = `<a href="${escHtml(d.ctaUrl || '#')}" class="btn btn-gold btn-lg">${escHtml(d.ctaLabel)}${seta}</a>`;
+    if (d.cta2Label) {
+      html += `<a href="${escHtml(d.cta2Url || '#')}" class="btn btn-outline-white btn-lg">${escHtml(d.cta2Label)}</a>`;
+    }
+    ctas.innerHTML = html;
+  }
+
+  const img = document.getElementById('destaque-img');
+  if (img && d.imagem) {
+    img.src = d.imagem;
+    img.alt = [d.titulo, d.tituloRealce].filter(Boolean).join(' ') || img.alt;
+  }
 }
 
 // Imagem local com fundo transparente para a linha TartOff (sobrepõe a do Tiny)
