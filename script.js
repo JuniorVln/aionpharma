@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPF();
   initCatalog();
   initProductPage();
+  initBarraTopo();
 });
 
 // ── Header Scroll ──────────────────────────────────
@@ -1263,6 +1264,19 @@ document.getElementById('search-btn')?.addEventListener('click', () => {
 
 let CATALOG = [];
 
+/* Uma requisição só de /api/produtos por página: a home, a página de
+   produto e a faixa do topo dividem a mesma promise. */
+let CATALOGO_PROMISE = null;
+function carregarCatalogo() {
+  if (!CATALOGO_PROMISE) {
+    CATALOGO_PROMISE = fetch('/api/produtos', { headers: b2bHeaders() }).then((r) => {
+      if (r.status === 401) b2bSessaoInvalida();
+      return r.json();
+    });
+  }
+  return CATALOGO_PROMISE;
+}
+
 function initCatalog() {
   const catalogGrid = document.getElementById('catalog-grid'); // página produtos
   const homeGrid = document.getElementById('products-grid');   // home
@@ -1273,11 +1287,7 @@ function initCatalog() {
 
   // Com sessão de lojista, o servidor devolve a tabela dele (Lojista
   // ou Distribuição) em vez do preço de consumidor final.
-  fetch('/api/produtos', { headers: b2bHeaders() })
-    .then((r) => {
-      if (r.status === 401) b2bSessaoInvalida();
-      return r.json();
-    })
+  carregarCatalogo()
     .then((data) => {
       CATALOG = (data.produtos || []).map(withTags);
       if (homeGrid) {
@@ -1295,6 +1305,32 @@ function initCatalog() {
         <p>Não foi possível carregar os produtos agora.</p>
         <button class="btn btn-primary btn-sm" onclick="location.reload()">Tentar novamente</button>
       </div>`;
+    });
+}
+
+/* ================================================================
+   Faixa do topo — o texto mora no painel (/admin - Vitrine).
+   O HTML da pagina traz uma versao estatica como rede de seguranca;
+   se o painel tiver texto, ele manda.
+   ================================================================ */
+
+function initBarraTopo() {
+  const barra = document.getElementById('announcement-bar');
+  if (!barra) return;
+  carregarCatalogo()
+    .then((data) => {
+      const d = data.destaque;
+      if (!d) return;
+      if (d.barraAtiva === false) {
+        barra.style.display = 'none';
+        return;
+      }
+      if (!d.barraTexto) return;
+      // *entre asteriscos* vira negrito - o resto entra escapado
+      barra.innerHTML = escHtml(d.barraTexto).replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+    })
+    .catch(() => {
+      /* sem API, a faixa estatica continua valendo */
     });
 }
 
@@ -1429,12 +1465,27 @@ function productUrl(p) {
   return `produto.html?id=${encodeURIComponent(p.id)}`;
 }
 
+/* Texto curto do card: a descricao do Tiny vem com HTML, entao tira as
+   tags, corta na ultima palavra inteira e fecha com reticencias. */
+function resumoProduto(texto, max = 110) {
+  const limpo = String(texto || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (limpo.length <= max) return limpo;
+  const corte = limpo.slice(0, max);
+  const espaco = corte.lastIndexOf(' ');
+  return (espaco > max * 0.6 ? corte.slice(0, espaco) : corte).replace(/[.,;:-]$/, '') + '…';
+}
+
 function productCardHTML(p) {
   const animalLabel = p.animal === 'gato' ? '🐈 Gatos'
     : p.animal === 'cao' ? '🐕 Cães'
     : '🐕 Cães & 🐈 Gatos';
   const priceOld = p.priceOld ? `<span class="price-old">${formatPrice(p.priceOld)}</span>` : '';
-  const desc = (p.description || '').split('\n')[0].slice(0, 90) || 'Produto Aion Pharma para o cuidado do seu pet.';
+  const desc = resumoProduto(p.description) || 'Produto Aion Pharma para o cuidado do seu pet.';
   const outOfStock = p.inStock === false;
   const safeName = (p.name || '').replace(/'/g, "\\'");
   const safeImage = (p.image || '').replace(/'/g, "\\'");
@@ -1539,11 +1590,7 @@ function initProductPage() {
 
   root.innerHTML = '<div class="product-page-loading">Carregando produto…</div>';
 
-  fetch('/api/produtos', { headers: b2bHeaders() })
-    .then((r) => {
-      if (r.status === 401) b2bSessaoInvalida();
-      return r.json();
-    })
+  carregarCatalogo()
     .then((data) => {
       const p = (data.produtos || []).map(withTags).find((item) => item.id === id);
       if (!p) {

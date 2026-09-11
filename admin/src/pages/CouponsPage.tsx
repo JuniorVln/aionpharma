@@ -120,6 +120,19 @@ export default function CouponsPage() {
     }
   }
 
+  async function apagar(c: Coupon) {
+    // Cupom já usado o servidor recusa apagar (o histórico aponta pra ele).
+    const ok = window.confirm(`Apagar o cupom ${c.codigo}? Isso não dá pra desfazer.`);
+    if (!ok) return;
+    try {
+      await apiFetch(`/api/admin/coupons?id=${encodeURIComponent(c.id)}`, { method: 'DELETE' });
+      if (editingId === c.id) reset();
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao apagar');
+    }
+  }
+
   return (
     <div className="page">
       <header className="page-header">
@@ -244,6 +257,9 @@ export default function CouponsPage() {
                       </button>
                       <button type="button" className="btn-link" onClick={() => toggleAtivo(c)}>
                         {c.ativo ? 'Desativar' : 'Ativar'}
+                      </button>
+                      <button type="button" className="btn-link perigo" onClick={() => apagar(c)}>
+                        Apagar
                       </button>
                     </td>
                   </tr>

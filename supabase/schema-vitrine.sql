@@ -59,3 +59,16 @@ insert into public.vitrine_destaque (
   '/assets/produtos/gel-tartoff-lineup.png'
 )
 on conflict (id) do nothing;
+
+-- ── Faixa de aviso do topo (11/09/2026) ──────────────────────────
+-- Estava chumbada no HTML de /produtos, /produto e produto-tartoff
+-- prometendo frete grátis e um cupom que não existia. Virou conteúdo
+-- editável pelo painel, no mesmo lugar do destaque.
+alter table public.vitrine_destaque
+  add column if not exists barra_ativa boolean not null default true,
+  add column if not exists barra_texto text;
+
+update public.vitrine_destaque
+   set barra_texto = coalesce(barra_texto,
+       '🐾 Enviamos para *todo o Brasil* — calcule o frete no carrinho')
+ where id = 1;

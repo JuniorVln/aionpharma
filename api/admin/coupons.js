@@ -128,7 +128,29 @@ export default async function handler(req, res) {
       return res.status(200).json({ coupon: data });
     }
 
-    res.setHeader('Allow', 'GET, POST, PATCH');
+    if (req.method === 'DELETE') {
+      const id = (req.query?.id || '').toString().trim();
+      if (!id) return res.status(400).json({ error: 'id é obrigatório.' });
+
+      // Cupom já usado não some: o histórico de resgate (e a comissão do
+      // influencer) aponta para ele. Nesse caso o certo é desativar.
+      const { data: usos, error: uErr } = await sb
+        .from('coupon_redemptions')
+        .select('id')
+        .eq('coupon_id', id);
+      if (uErr) throw new Error(uErr.message);
+      if ((usos || []).length) {
+        return res.status(409).json({
+          error: `Esse cupom já foi usado ${usos.length}x. Apagar apagaria o histórico — desative em vez de excluir.`,
+        });
+      }
+
+      const { error } = await sb.from('coupons').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      return res.status(200).json({ ok: true });
+    }
+
+    res.setHeader('Allow', 'GET, POST, PATCH, DELETE');
     return res.status(405).json({ error: 'Método não permitido' });
   } catch (err) {
     console.error('[/api/admin/coupons]', err.message);

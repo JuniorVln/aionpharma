@@ -17,6 +17,8 @@ type Destaque = {
   imagem: string | null;
   imagemUrl: string | null;
   temImagemPropria: boolean;
+  barraAtiva: boolean;
+  barraTexto: string | null;
 };
 
 type Produto = {
@@ -110,6 +112,8 @@ export default function VitrinePage() {
           cta2_label: destaque.cta2Label,
           cta2_url: destaque.cta2Url,
           imagem_url: destaque.imagemUrl,
+          barra_ativa: destaque.barraAtiva,
+          barra_texto: destaque.barraTexto,
         }),
       });
       await load();
@@ -240,6 +244,31 @@ export default function VitrinePage() {
       {aba === 'destaque' && destaque && (
         <div className="grid-2">
           <form className="panel form-panel" onSubmit={salvarDestaque}>
+            <h2 className="panel-title">Faixa do topo</h2>
+            <p className="small muted">
+              A tarja fina que aparece acima do menu nas páginas de produto. Cuidado com
+              promessa: só escreva aqui o que estiver valendo de verdade. Entre asteriscos
+              fica em negrito — *assim*.
+            </p>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={destaque.barraAtiva}
+                onChange={(e) => mexer('barraAtiva', e.target.checked)}
+              />
+              Mostrar a faixa
+            </label>
+            <label>
+              Texto da faixa
+              <input
+                value={destaque.barraTexto || ''}
+                onChange={(e) => mexer('barraTexto', e.target.value)}
+                placeholder="🐾 Enviamos para *todo o Brasil*"
+              />
+            </label>
+
+            <hr className="divisor" />
+            <h2 className="panel-title">Bloco de destaque</h2>
             <label className="check">
               <input
                 type="checkbox"

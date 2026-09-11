@@ -27,7 +27,7 @@ export async function lerDestaque() {
   const { rows } = await getPool().query(
     `select id, ativo, badge, titulo, titulo_realce, texto, beneficios, sku,
             preco_prefixo, cta_label, cta_url, cta2_label, cta2_url,
-            imagem_url, imagem_mime, atualizado_em,
+            imagem_url, imagem_mime, atualizado_em, barra_ativa, barra_texto,
             (imagem_bytes is not null) as tem_imagem
        from public.vitrine_destaque where id = 1`
   );
@@ -51,12 +51,15 @@ export async function lerDestaque() {
     imagemUrl: d.imagem_url || null,
     temImagemPropria: d.tem_imagem,
     atualizadoEm: d.atualizado_em,
+    barraAtiva: d.barra_ativa,
+    barraTexto: d.barra_texto,
   };
 }
 
 const CAMPOS_DESTAQUE = [
-  'ativo', 'badge', 'titulo', 'titulo_realce', 'texto', 'sku',
+  'ativo', 'barra_ativa', 'badge', 'titulo', 'titulo_realce', 'texto', 'sku',
   'preco_prefixo', 'cta_label', 'cta_url', 'cta2_label', 'cta2_url', 'imagem_url',
+  'barra_texto',
 ];
 
 export async function salvarDestaque(body) {
@@ -64,7 +67,8 @@ export async function salvarDestaque(body) {
   const vals = [];
   for (const campo of CAMPOS_DESTAQUE) {
     if (!(campo in body)) continue;
-    vals.push(campo === 'ativo' ? Boolean(body[campo]) : normalizarTexto(body[campo]));
+    const booleano = campo === 'ativo' || campo === 'barra_ativa';
+    vals.push(booleano ? Boolean(body[campo]) : normalizarTexto(body[campo]));
     sets.push(`${campo} = $${vals.length}`);
   }
   if ('beneficios' in body) {

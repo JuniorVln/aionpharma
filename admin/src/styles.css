@@ -606,3 +606,14 @@ input[type='file'] {
 .linha-ativa {
   background: rgba(0, 153, 214, 0.06);
 }
+
+.divisor {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 0.5rem 0;
+  width: 100%;
+}
+
+.btn-link.perigo {
+  color: var(--danger);
+}
