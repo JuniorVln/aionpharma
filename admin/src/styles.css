@@ -361,10 +361,6 @@ select:focus {
 .table td {
   padding: 0.75rem 0.4rem;
   border-bottom: 1px solid var(--line);
-  vertical-align: top;
-}
-
-.table td {
   vertical-align: middle;
 }
 
