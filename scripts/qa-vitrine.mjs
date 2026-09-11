@@ -2,7 +2,11 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 
 const OUT = process.env.QA_OUT || './_qa';
-const senha = fs.readFileSync(process.env.TEMP + '/qa-vitrine.txt', 'utf8').split('\n')[0];
+// Credenciais de um usuário do painel, passadas por ambiente:
+//   QA_EMAIL=... QA_SENHA=... node scripts/qa-vitrine.mjs
+const email = process.env.QA_EMAIL;
+const senha = process.env.QA_SENHA;
+if (!email || !senha) throw new Error('Defina QA_EMAIL e QA_SENHA.');
 fs.mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch();
@@ -27,7 +31,7 @@ await page.locator('#products').screenshot({ path: `${OUT}/home-produtos.png` })
 
 // 2) Painel
 await page.goto('https://www.aionpharma.ind.br/admin/', { waitUntil: 'networkidle' });
-await page.fill('input[type=email]', 'qa-vitrine@aionpharma.local');
+await page.fill('input[type=email]', email);
 await page.fill('input[type=password]', senha);
 await page.click('button[type=submit]');
 await page.waitForTimeout(2500);

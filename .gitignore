@@ -18,3 +18,6 @@ Referencias/
 
 .vercel
 .env*
+
+# Screenshots de QA (gerados por scripts/qa-vitrine.mjs)
+_qa/

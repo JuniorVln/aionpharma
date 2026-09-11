@@ -595,7 +595,7 @@ export default function VitrinePage() {
                         </span>
                       </td>
                       <td>{moeda(p.preco)}</td>
-                      <td className="td-actions">
+                      <td>
                         <button type="button" className="btn-link" onClick={() => editar(p)}>
                           Editar
                         </button>
